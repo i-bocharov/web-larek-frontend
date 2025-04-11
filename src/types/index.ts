@@ -1,9 +1,9 @@
-interface ProductList {
+interface IProductList {
   total: number;        // Общее количество продуктов
-  items: Product[];     // Массив продуктов
+  items: IProduct[];    // Массив продуктов
 }
 
-interface Product {
+interface IProduct {
   id: string;           // Уникальный идентификатор продукта
   description: string;  // Описание продукта
   image: string;        // Путь к изображению продукта
