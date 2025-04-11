@@ -41,4 +41,15 @@ npm run build
 yarn build
 ```
 
+## Архитектура
 ![UML-диаграмма](uml-diagramm.png)
+
+## Базовый код
+1. Класс Api
+2. Класс EventEmitter
+
+## Model
+
+## View
+
+## Presenter
