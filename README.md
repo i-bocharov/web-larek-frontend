@@ -40,3 +40,5 @@ npm run build
 ```
 yarn build
 ```
+
+![UML-диаграмма](uml-diagramm.png)
