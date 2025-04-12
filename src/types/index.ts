@@ -1,9 +1,9 @@
-interface IProductList {
+export interface IProductList {
   total: number;        // Общее количество продуктов
   items: IProduct[];    // Массив продуктов
 }
 
-interface IProduct {
+export interface IProduct {
   id: string;           // Уникальный идентификатор продукта
   description: string;  // Описание продукта
   image: string;        // Путь к изображению продукта
@@ -12,11 +12,11 @@ interface IProduct {
   price: number | null; // Цена продукта (может быть null)
 }
 
-interface IProductNotFound {
+export interface IProductNotFound {
   error: string;        // Сообщение об ошибке ("NotFound")
 }
 
-interface IOrder {
+export interface IOrder {
   payment: string;      // Способ оплаты ("online")
   email: string;        // Электронная почта
   phone: string;        // Телефон
@@ -25,11 +25,11 @@ interface IOrder {
   items: string[];      // Массив идентификаторов продуктов
 }
 
-interface IOrderSuccess {
+export interface IOrderSuccess {
   id: string;           // Уникальный идентификатор заказа
   total: number;        // Общая сумма заказа
 }
 
-interface IOrderError {
+export interface IOrderError {
   error: string;        // Сообщение об ошибке
 }
