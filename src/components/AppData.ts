@@ -1,5 +1,6 @@
 import { Model } from './base/Model';
 import { IProduct, IOrder, IAppState } from '../types';
+
 /**
  * Модель для управления продуктами.
  */
