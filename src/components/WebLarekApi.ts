@@ -1,8 +1,9 @@
 import { Api } from './base/Api';
-import { IProduct } from '../types';
+import { IProductList, IProduct, IProductNotFound } from '../types';
 
 export interface IWebLarekApi {
-	getProducts: () => Promise<IProduct[]>;
+	getProducts: () => Promise<IProductList>;
+	getProductById: (id: string) => Promise<IProduct | IProductNotFound>;
 }
 
 export class WebLarekApi extends Api implements IWebLarekApi {
@@ -13,9 +14,32 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 		this.cdn = cdn;
 	}
 
-	getProducts(): Promise<IProduct[]> {
-		return this.get('/product').then((data: IProduct[]) => {
-			return data;
+	getProducts(): Promise<IProductList> {
+		return this.get('/product').then((data: IProductList) => {
+			// Добавляем CDN к путям изображений
+			return {
+				...data,
+				items: data.items.map((item) => ({
+					...item,
+					image: this.cdn + item.image,
+				})),
+			};
 		});
+	}
+
+	getProductById(id: string): Promise<IProduct | IProductNotFound> {
+		return this.get(`/product/${id}`).then(
+			(data: IProduct | IProductNotFound) => {
+				if ('error' in data) {
+					// Если сервер вернул ошибку
+					return data as IProductNotFound;
+				}
+				// Добавляем CDN к пути изображения
+				return {
+					...data,
+					image: this.cdn + (data as IProduct).image,
+				};
+			}
+		);
 	}
 }
