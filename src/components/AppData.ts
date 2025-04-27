@@ -52,7 +52,50 @@ export class ProductModel extends Model<IProduct> {
 /**
  * Модель для управления заказами.
  */
-export class OrderModel extends Model<IOrder> {}
+export class OrderModel extends Model<IOrder> {
+	private api: WebLarekApi;
+
+	constructor(data: Partial<IOrder>, events: IEvents, api: WebLarekApi) {
+		super(data, events);
+		this.api = api;
+	}
+
+	async placeOrder(orderData: IOrder): Promise<void> {
+		try {
+			const result = await this.api.placeOrder(orderData);
+
+			if ('error' in result) {
+				this.emitChanges('order:error', { error: result.error });
+			} else {
+				this.emitChanges('order:success', { order: result });
+			}
+		} catch (error) {
+			this.emitChanges('order:error', {
+				error: 'Ошибка при размещении заказа',
+			});
+		}
+	}
+
+	validateOrder(orderData: IOrder): boolean {
+		const errors: Partial<Record<keyof IOrder, string>> = {};
+
+		if (!orderData.email) {
+			errors.email = 'Необходимо указать email';
+		}
+		if (!orderData.phone) {
+			errors.phone = 'Необходимо указать телефон';
+		}
+		if (!orderData.address) {
+			errors.address = 'Необходимо указать адрес';
+		}
+		if (orderData.items.length === 0) {
+			errors.items = 'Корзина пуста';
+		}
+
+		this.emitChanges('formErrors:change', errors);
+		return Object.keys(errors).length === 0;
+	}
+}
 
 /**
  * Модель для состояния приложения.
