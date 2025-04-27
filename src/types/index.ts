@@ -47,6 +47,7 @@ export interface IAppState {
 		items: string[]; // Массив ID продуктов в заказе
 	} | null; // Информация о текущем заказе (или null, если заказа нет).
 	loading: boolean; // Флаг загрузки данных (например, при загрузке каталога продуктов).
+	paymentMethod: 'online' | 'cash' | null; // Выбранный способ оплаты
 }
 
 export type IBasketItem = Pick<IProduct, 'id' | 'title' | 'price'> & {

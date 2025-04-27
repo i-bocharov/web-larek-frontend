@@ -118,6 +118,7 @@ export class AppState extends Model<IAppState> {
 				preview: null,
 				order: null,
 				loading: false,
+				paymentMethod: null,
 			},
 			events
 		);
@@ -204,5 +205,15 @@ export class AppState extends Model<IAppState> {
 		} finally {
 			this.set({ loading: false });
 		}
+	}
+
+	updateBasketCounter(): void {
+		const count = this.state.basket.length;
+		this.emitChanges('basket:counter', { count });
+	}
+
+	setPaymentMethod(method: 'online' | 'cash'): void {
+		this.set({ paymentMethod: method });
+		this.emitChanges('payment:method', { method });
 	}
 }
