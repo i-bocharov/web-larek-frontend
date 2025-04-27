@@ -53,3 +53,8 @@ export interface IAppState {
 export type IBasketItem = Pick<IProduct, 'id' | 'title' | 'price'> & {
 	quantity: number; // Количество единиц продукта в корзине.
 };
+
+export interface IFormState {
+	valid: boolean; // Флаг валидности формы
+	errors: string[]; // Массив сообщений об ошибках
+}
