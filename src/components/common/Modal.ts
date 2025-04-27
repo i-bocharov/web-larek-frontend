@@ -19,13 +19,22 @@ export class Modal extends Component<IModalData> {
 		);
 		this._content = ensureElement<HTMLElement>('.modal__content', container);
 
-		this._closeButton.addEventListener('click', this.close.bind(this));
-		this.container.addEventListener('click', this.close.bind(this));
-		this._content.addEventListener('click', (event) => event.stopPropagation());
+		this._closeButton.addEventListener('click', () => this.close());
+		this.container.addEventListener('click', (event) => {
+			if (event.target === this.container) {
+				this.close();
+			}
+		});
 	}
 
-	set content(value: HTMLElement) {
-		this._content.replaceChildren(value);
+	set content(value: HTMLElement | DocumentFragment) {
+		const element =
+			value instanceof DocumentFragment
+				? (value.firstElementChild as HTMLElement)
+				: value;
+		if (element) {
+			this._content.replaceChildren(element);
+		}
 	}
 
 	open() {
@@ -35,13 +44,19 @@ export class Modal extends Component<IModalData> {
 
 	close() {
 		this.container.classList.remove('modal_active');
-		this.content = null;
+		this._content.replaceChildren();
 		this.events.emit('modal:close');
 	}
 
 	render(data: IModalData): HTMLElement {
-		super.render(data);
-		this.open();
+		if (data.content) {
+			this.content = data.content;
+			this.open();
+		}
 		return this.container;
+	}
+
+	isActive(): boolean {
+		return this.container.classList.contains('modal_active');
 	}
 }

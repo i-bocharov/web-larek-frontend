@@ -124,6 +124,14 @@ export class AppState extends Model<IAppState> {
 		);
 		this.productModel = productModel;
 		this.orderModel = orderModel;
+		this.state = {
+			catalog: [],
+			basket: [],
+			preview: null,
+			order: null,
+			loading: false,
+			paymentMethod: null,
+		};
 	}
 
 	private set(nextState: Partial<IAppState>): void {
@@ -162,7 +170,8 @@ export class AppState extends Model<IAppState> {
 
 	clearBasket(): void {
 		this.set({ basket: [] });
-		this.emitChanges('basket:updated', { basket: this.state.basket });
+		this.updateBasketCounter();
+		this.emitChanges('basket:updated', { basket: [] });
 	}
 
 	setPreview(productId: string | null): void {
@@ -171,18 +180,31 @@ export class AppState extends Model<IAppState> {
 	}
 
 	getBasketItems(): IBasketItem[] {
-		return this.state.basket.map((productId) => {
-			const product = this.state.catalog.find((item) => item.id === productId);
-			return {
-				id: product.id,
-				title: product.title,
-				price: product.price,
-				quantity: 1, // Предполагаем, что количество всегда 1
-			};
-		});
+		if (!this.state.catalog.length) {
+			return [];
+		}
+		return this.state.basket
+			.map((productId) => {
+				const product = this.state.catalog.find(
+					(item) => item.id === productId
+				);
+				if (!product) {
+					return null;
+				}
+				return {
+					id: product.id,
+					title: product.title,
+					price: product.price,
+					quantity: 1,
+				};
+			})
+			.filter(Boolean);
 	}
 
 	calculateBasketTotal(): number {
+		if (!this.state.catalog.length) {
+			return 0;
+		}
 		return this.state.basket.reduce((total, productId) => {
 			const product = this.state.catalog.find((item) => item.id === productId);
 			return total + (product?.price || 0);
@@ -197,6 +219,7 @@ export class AppState extends Model<IAppState> {
 			}
 			await this.orderModel.placeOrder(orderData);
 			this.set({ order: orderData }); // Обновляем состояние заказа
+			this.clearBasket(); // Очищаем корзину после успешного заказа
 			this.emitChanges('order:placed', { order: orderData });
 		} catch (error) {
 			this.emitChanges('order:error', {
@@ -215,5 +238,9 @@ export class AppState extends Model<IAppState> {
 	setPaymentMethod(method: 'online' | 'cash'): void {
 		this.set({ paymentMethod: method });
 		this.emitChanges('payment:method', { method });
+	}
+
+	getPaymentMethod(): 'online' | 'cash' | null {
+		return this.state.paymentMethod;
 	}
 }

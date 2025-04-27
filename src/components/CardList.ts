@@ -22,7 +22,8 @@ export class CardList extends Component<IProductList> {
 			const template = document.getElementById(
 				'card-catalog'
 			) as HTMLTemplateElement;
-			const cardElement = template.content.cloneNode(true) as HTMLElement;
+			const cardFragment = template.content.cloneNode(true) as DocumentFragment;
+			const cardElement = cardFragment.firstElementChild as HTMLElement;
 			const card = new Card(cardElement, this.events);
 			card.render(product);
 			this.container.append(cardElement);

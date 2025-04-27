@@ -58,3 +58,9 @@ export interface IFormState {
 	valid: boolean; // Флаг валидности формы
 	errors: string[]; // Массив сообщений об ошибках
 }
+
+export interface IBasketView {
+	items: IBasketItem[];
+	total: number;
+	selected: string[];
+}

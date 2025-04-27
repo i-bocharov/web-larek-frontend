@@ -25,4 +25,16 @@ export class Contacts extends Form<IOrder> {
 	isValid(): boolean {
 		return this.valid;
 	}
+
+	getEmail(): string {
+		return this.container.email.value;
+	}
+
+	getPhone(): string {
+		return this.container.phone.value;
+	}
+
+	getAddress(): string {
+		return this.container.address.value;
+	}
 }

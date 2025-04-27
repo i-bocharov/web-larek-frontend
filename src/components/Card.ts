@@ -4,13 +4,21 @@ import { IProduct } from '../types';
 
 export class Card extends Component<IProduct> {
 	private events: IEvents;
+	private productId: string | null = null;
 
 	constructor(container: HTMLElement, events: IEvents) {
 		super(container);
-		this.events = events; // Сохраняем events локально
+		this.events = events;
+
+		this.container.addEventListener('click', () => {
+			if (this.productId) {
+				this.events.emit('product:selected', { productId: this.productId });
+			}
+		});
 	}
 
 	render(product: IProduct): HTMLElement {
+		// ...existing code...
 		this.container.querySelector('.card__category')!.textContent =
 			product.category;
 		this.container.querySelector('.card__title')!.textContent = product.title;
@@ -21,10 +29,8 @@ export class Card extends Component<IProduct> {
 			.querySelector('.card__image')!
 			.setAttribute('src', product.image);
 
-		this.container.addEventListener('click', () => {
-			this.events.emit('product:selected', { productId: product.id });
-		});
+		this.productId = product.id; // сохраняем id для обработчика
 
-		return this.container; // Возвращаем контейнер для совместимости с базовым классом
+		return this.container;
 	}
 }

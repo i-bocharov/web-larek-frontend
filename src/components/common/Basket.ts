@@ -1,17 +1,7 @@
 import { Component } from '../base/Component';
-import {
-	cloneTemplate,
-	createElement,
-	ensureElement,
-	formatNumber,
-} from '../../utils/utils';
+import { ensureElement, formatNumber } from '../../utils/utils';
 import { EventEmitter } from '../base/Events';
-
-interface IBasketView {
-	items: HTMLElement[];
-	total: number;
-	selected: string[];
-}
+import { IBasketView, IBasketItem } from '../../types';
 
 export class Basket extends Component<IBasketView> {
 	protected _list: HTMLElement;
@@ -22,39 +12,66 @@ export class Basket extends Component<IBasketView> {
 		super(container);
 
 		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
-		this._total = this.container.querySelector('.basket__total');
-		this._button = this.container.querySelector('.basket__action');
+		this._total = ensureElement<HTMLElement>('.basket__price', this.container);
+		this._button = ensureElement<HTMLElement>(
+			'.basket__button',
+			this.container
+		);
 
-		if (this._button) {
-			this._button.addEventListener('click', () => {
-				events.emit('order:open');
+		this._button.addEventListener('click', () => {
+			this.events.emit('order:open');
+		});
+
+		this._list.addEventListener('click', (e: MouseEvent) => {
+			const target = e.target as HTMLElement;
+			if (target.classList.contains('basket__item-delete')) {
+				const item = target.closest('.basket__item');
+				if (item) {
+					const itemId = item.getAttribute('data-id');
+					if (itemId) {
+						this.events.emit('basket:item-removed', { productId: itemId });
+					}
+				}
+			}
+		});
+	}
+
+	protected renderItem(item: IBasketItem): HTMLElement {
+		const itemElement = document.createElement('li');
+		itemElement.classList.add('basket__item');
+		itemElement.setAttribute('data-id', item.id);
+		itemElement.innerHTML = `
+            <span class="basket__item-title">${item.title}</span>
+            <span class="basket__item-price">${formatNumber(
+							item.price
+						)} синапсов</span>
+            <button class="basket__item-delete" type="button"></button>
+        `;
+		return itemElement;
+	}
+
+	set items(items: IBasketItem[]) {
+		this._list.innerHTML = '';
+		if (items.length) {
+			items.forEach((item) => {
+				this._list.appendChild(this.renderItem(item));
 			});
-		}
-
-		this.items = [];
-	}
-
-	set items(items: HTMLElement[]) {
-		if (items.length) {
-			this._list.replaceChildren(...items);
 		} else {
-			this._list.replaceChildren(
-				createElement<HTMLParagraphElement>('p', {
-					textContent: 'Корзина пуста',
-				})
-			);
-		}
-	}
-
-	set selected(items: string[]) {
-		if (items.length) {
-			this.setDisabled(this._button, false);
-		} else {
-			this.setDisabled(this._button, true);
+			this._list.innerHTML = 'Корзина пуста';
 		}
 	}
 
 	set total(total: number) {
-		this.setText(this._total, formatNumber(total));
+		this._total.textContent = `${formatNumber(total)} синапсов`;
+	}
+
+	render(data: Pick<IBasketView, 'items' | 'total'>): HTMLElement {
+		if (data.items) {
+			this.items = data.items;
+		}
+		if (data.total !== undefined) {
+			this.total = data.total;
+		}
+		return this.container;
 	}
 }
