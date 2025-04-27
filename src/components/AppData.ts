@@ -1,5 +1,5 @@
 import { Model } from './base/Model';
-import { IProduct, IOrder, IAppState } from '../types';
+import { IProduct, IOrder, IAppState, IBasketItem } from '../types';
 import { WebLarekApi } from './WebLarekApi';
 import { IEvents } from './base/Events';
 
@@ -17,15 +17,16 @@ export class ProductModel extends Model<IProduct> {
 	/**
 	 * Загружает список продуктов с сервера.
 	 */
-	async loadProducts(): Promise<void> {
+	async loadProducts(): Promise<{ products: IProduct[] }> {
 		try {
 			const productList = await this.api.getProducts();
-
 			this.emitChanges('products:loaded', { products: productList.items });
+			return { products: productList.items }; // Возвращаем продукты
 		} catch (error) {
 			this.emitChanges('products:error', {
 				error: 'Ошибка при загрузке продуктов',
 			});
+			throw error; // Пробрасываем ошибку для обработки выше
 		}
 	}
 
@@ -100,4 +101,108 @@ export class OrderModel extends Model<IOrder> {
 /**
  * Модель для состояния приложения.
  */
-export class AppState extends Model<IAppState> {}
+export class AppState extends Model<IAppState> {
+	private state: IAppState;
+	private productModel: ProductModel;
+	private orderModel: OrderModel;
+
+	constructor(
+		events: IEvents,
+		productModel: ProductModel,
+		orderModel: OrderModel
+	) {
+		super(
+			{
+				catalog: [],
+				basket: [],
+				preview: null,
+				order: null,
+				loading: false,
+			},
+			events
+		);
+		this.productModel = productModel;
+		this.orderModel = orderModel;
+	}
+
+	private set(nextState: Partial<IAppState>): void {
+		this.state = { ...this.state, ...nextState };
+		this.emitChanges('state:updated', this.state);
+	}
+
+	loadProducts(): void {
+		this.set({ loading: true });
+		this.productModel
+			.loadProducts()
+			.then(({ products }) => {
+				this.set({ catalog: products }); // Обновляем каталог продуктов
+			})
+			.catch(() => {
+				// Ошибка уже обработана в ProductModel, здесь можно ничего не делать
+			})
+			.finally(() => {
+				this.set({ loading: false });
+			});
+	}
+
+	addToBasket(productId: string): void {
+		if (!this.state.basket.includes(productId)) {
+			this.set({ basket: [...this.state.basket, productId] });
+			this.emitChanges('basket:updated', { basket: this.state.basket });
+		}
+	}
+
+	removeFromBasket(productId: string): void {
+		this.set({
+			basket: this.state.basket.filter((id) => id !== productId),
+		});
+		this.emitChanges('basket:updated', { basket: this.state.basket });
+	}
+
+	clearBasket(): void {
+		this.set({ basket: [] });
+		this.emitChanges('basket:updated', { basket: this.state.basket });
+	}
+
+	setPreview(productId: string | null): void {
+		this.set({ preview: productId });
+		this.emitChanges('preview:changed', { preview: productId });
+	}
+
+	getBasketItems(): IBasketItem[] {
+		return this.state.basket.map((productId) => {
+			const product = this.state.catalog.find((item) => item.id === productId);
+			return {
+				id: product.id,
+				title: product.title,
+				price: product.price,
+				quantity: 1, // Предполагаем, что количество всегда 1
+			};
+		});
+	}
+
+	calculateBasketTotal(): number {
+		return this.state.basket.reduce((total, productId) => {
+			const product = this.state.catalog.find((item) => item.id === productId);
+			return total + (product?.price || 0);
+		}, 0);
+	}
+
+	async placeOrder(orderData: IOrder): Promise<void> {
+		try {
+			this.set({ loading: true });
+			if (!this.orderModel.validateOrder(orderData)) {
+				return; // Валидация не пройдена
+			}
+			await this.orderModel.placeOrder(orderData);
+			this.set({ order: orderData }); // Обновляем состояние заказа
+			this.emitChanges('order:placed', { order: orderData });
+		} catch (error) {
+			this.emitChanges('order:error', {
+				error: 'Ошибка при размещении заказа',
+			});
+		} finally {
+			this.set({ loading: false });
+		}
+	}
+}

@@ -34,4 +34,21 @@ export interface IOrderError {
 	error: string; // Сообщение об ошибке
 }
 
-export interface IAppState {}
+export interface IAppState {
+	catalog: IProduct[]; // Каталог всех доступных продуктов.
+	basket: string[]; // Массив ID продуктов, добавленных в корзину.
+	preview: string | null; // ID продукта, который отображается в предпросмотре (или null, если предпросмотра нет).
+	order: {
+		payment: string; // Способ оплаты ("online")
+		email: string; // Электронная почта
+		phone: string; // Телефон
+		address: string; // Адрес доставки
+		total: number; // Общая сумма заказа
+		items: string[]; // Массив ID продуктов в заказе
+	} | null; // Информация о текущем заказе (или null, если заказа нет).
+	loading: boolean; // Флаг загрузки данных (например, при загрузке каталога продуктов).
+}
+
+export type IBasketItem = Pick<IProduct, 'id' | 'title' | 'price'> & {
+	quantity: number; // Количество единиц продукта в корзине.
+};
