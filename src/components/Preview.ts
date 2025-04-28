@@ -33,8 +33,13 @@ export class Preview extends Component<IProduct> {
 		const addToBasketButton = preview.querySelector(
 			'.card__button'
 		) as HTMLButtonElement;
+
 		addToBasketButton.addEventListener('click', () => {
-			this.events.emit('basket:item-added', { productId: product.id });
+			if (addToBasketButton.textContent === 'В корзину') {
+				this.events.emit('basket:item-added', { productId: product.id });
+			} else {
+				this.events.emit('basket:item-removed', { productId: product.id });
+			}
 		});
 
 		this.container.replaceChildren(preview);

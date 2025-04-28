@@ -122,8 +122,18 @@ export class Page {
 			) as DocumentFragment;
 			const previewElement = previewFragment.firstElementChild as HTMLElement;
 
+			// Проверяем есть ли товар в корзине
+			const basketItems = this.appState.getBasketItems();
+			const isInBasket = basketItems.some((item) => item.id === product.id);
+
 			this.preview = new Preview(previewElement, this.events);
 			this.preview.render(product);
+
+			// Устанавливаем правильный текст кнопки
+			const button = previewElement.querySelector('.card__button');
+			if (button) {
+				button.textContent = isInBasket ? 'Убрать из корзины' : 'В корзину';
+			}
 
 			this.modal.render({
 				content: previewElement,
@@ -153,6 +163,12 @@ export class Page {
 			({ productId }) => {
 				this.appState.addToBasket(productId);
 				this.updateBasketCounter();
+
+				// Обновляем текст кнопки в модальном окне
+				const button = this.modal.getButton();
+				if (button) {
+					button.textContent = 'Убрать из корзины';
+				}
 			}
 		);
 
@@ -162,6 +178,22 @@ export class Page {
 			({ productId }) => {
 				this.appState.removeFromBasket(productId);
 				this.updateBasketCounter();
+
+				// Если открыта корзина, обновляем её содержимое
+				const modalContent = this.modal.getContent();
+				if (modalContent.querySelector('.basket')) {
+					const basketItems = this.appState.getBasketItems();
+					this.basket.render({
+						items: basketItems,
+						total: this.appState.calculateBasketTotal(),
+					});
+				}
+
+				// Обновляем текст кнопки в модальном окне
+				const button = this.modal.getButton();
+				if (button) {
+					button.textContent = 'В корзину';
+				}
 			}
 		);
 

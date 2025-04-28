@@ -42,9 +42,11 @@ export class Basket extends Component<IBasketView> {
 		itemElement.setAttribute('data-id', item.id);
 		itemElement.innerHTML = `
             <span class="basket__item-title">${item.title}</span>
-            <span class="basket__item-price">${formatNumber(
-							item.price
-						)} синапсов</span>
+            <span class="basket__item-price">${
+							item.price === null
+								? 'Бесплатно'
+								: `${formatNumber(item.price)} синапсов`
+						}</span>
             <button class="basket__item-delete" type="button"></button>
         `;
 		return itemElement;
