@@ -10,9 +10,13 @@ interface IFormState {
 export class Form<T> extends Component<IFormState> {
 	protected _submit: HTMLButtonElement;
 	protected _errors: HTMLElement;
+	private _valid: boolean = false;
 
 	constructor(protected container: HTMLFormElement, protected events: IEvents) {
 		super(container);
+		console.log(this.container.name, 'Form: Constructor вызван', {
+			formElement: container.outerHTML,
+		});
 
 		this._submit = ensureElement<HTMLButtonElement>(
 			'button[type=submit]',
@@ -41,7 +45,12 @@ export class Form<T> extends Component<IFormState> {
 	}
 
 	set valid(value: boolean) {
+		this._valid = value;
 		this._submit.disabled = !value;
+	}
+
+	get valid(): boolean {
+		return this._valid;
 	}
 
 	set errors(value: string) {

@@ -232,25 +232,62 @@ export class Page {
 
 		// Открытие формы заказа
 		this.events.on('order:open', () => {
+			console.log('Page: Открытие формы заказа');
+
 			// Создаем новый экземпляр формы заказа
 			const orderTemplate = document.querySelector(
 				'#order'
 			) as HTMLTemplateElement;
-			this.orderFormContainer = orderTemplate.content.cloneNode(
+			const orderFragment = orderTemplate.content.cloneNode(
 				true
+			) as DocumentFragment;
+			const formElement = orderFragment.querySelector(
+				'form'
 			) as HTMLFormElement;
-			this.orderForm = new Order(this.orderFormContainer, this.events);
+
+			// Убеждаемся, что у формы есть имя
+			formElement.name = 'order';
+
+			console.log('Page: Создание формы заказа', {
+				formElement: formElement.outerHTML,
+				name: formElement.name,
+			});
+
+			this.orderForm = new Order(formElement, this.events);
 
 			this.modal.render({
-				content: this.orderFormContainer,
+				content: formElement,
 			});
 		});
 
 		// Валидация и переход к форме контактов
 		this.events.on('order:form-open', () => {
 			if (this.orderForm.valid) {
+				console.log('Page: Открытие формы контактов');
+
+				// Создаем новый экземпляр формы контактов
+				const contactsTemplate = document.querySelector(
+					'#contacts'
+				) as HTMLTemplateElement;
+				const contactsFragment = contactsTemplate.content.cloneNode(
+					true
+				) as DocumentFragment;
+				const formElement = contactsFragment.querySelector(
+					'form'
+				) as HTMLFormElement;
+
+				// Убеждаемся, что у формы есть имя
+				formElement.name = 'contacts';
+
+				console.log('Page: Создание формы контактов', {
+					formElement: formElement.outerHTML,
+					name: formElement.name,
+				});
+
+				this.contactsForm = new Contacts(formElement, this.events);
+
 				this.modal.render({
-					content: this.contactsFormContainer,
+					content: formElement,
 				});
 			}
 		});
@@ -275,7 +312,6 @@ export class Page {
 		// Размещение заказа
 		this.events.on('order:submit', () => {
 			const basketItems = this.appState.getBasketItems();
-			// Фильтруем только товары с ценой
 			const itemsWithPrice = basketItems.filter((item) => item.price !== null);
 
 			if (itemsWithPrice.length > 0) {
@@ -283,7 +319,7 @@ export class Page {
 					payment: this.appState.getPaymentMethod() || 'online',
 					email: this.contactsForm.getEmail(),
 					phone: this.contactsForm.getPhone(),
-					address: this.contactsForm.getAddress(),
+					address: this.orderForm.getAddress(),
 					total: itemsWithPrice.reduce(
 						(sum, item) => sum + (item.price || 0),
 						0
