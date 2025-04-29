@@ -20,17 +20,9 @@ export class Basket extends Component<IBasketView> {
 			this.container
 		);
 
-		// Создаем обработчики как методы класса
 		this.buttonClickHandler = () => {
-			if (
-				this._list.children.length > 0 &&
-				this._list.innerHTML !== 'Корзина пуста'
-			) {
-				console.log('Basket: Клик по кнопке оформить', {
-					buttonDisabled: this._button.hasAttribute('disabled'),
-					listEmpty: this._list.children.length === 0,
-					listContent: this._list.innerHTML,
-				});
+			// Событие клика обрабатываем, только если кнопка не отключена
+			if (!this._button.hasAttribute('disabled')) {
 				this.events.emit('order:open');
 			}
 		};
@@ -41,13 +33,16 @@ export class Basket extends Component<IBasketView> {
 				const item = target.closest('.basket__item');
 				if (item) {
 					const itemId = item.getAttribute('data-id');
-					console.log('Basket: Удаление товара', { itemId });
 					if (itemId) {
 						this.events.emit('basket:item-removed', { productId: itemId });
 					}
 				}
 			}
 		};
+
+		// Инициализируем обработчики событий
+		this._button.addEventListener('click', this.buttonClickHandler);
+		this._list.addEventListener('click', this.listClickHandler);
 	}
 
 	protected renderItem(item: IBasketItem): HTMLElement {
@@ -66,29 +61,50 @@ export class Basket extends Component<IBasketView> {
 		return itemElement;
 	}
 
-	set items(items: IBasketItem[]) {
-		console.log('Basket: Обновление списка товаров', {
-			itemsCount: items.length,
-			currentListContent: this._list.innerHTML,
+	private updateButtonState(items: IBasketItem[]): void {
+		console.log('Basket: Проверка товаров в корзине:', items);
+
+		// Проверяем пустая ли корзина
+		if (!items.length) {
+			console.log('Basket: Корзина пуста - деактивируем кнопку');
+			this._button.setAttribute('disabled', 'disabled');
+			return;
+		}
+
+		// Проверяем все ли товары бесплатные
+		const allItemsFree = items.every((item) => {
+			const isFree = item.price === null;
+			console.log(
+				`Basket: Товар ${item.title} ${
+					isFree ? 'бесплатный' : 'платный'
+				} (price: ${item.price})`
+			);
+			return isFree;
 		});
 
+		if (allItemsFree) {
+			console.log('Basket: Все товары бесплатные - деактивируем кнопку');
+			this._button.setAttribute('disabled', 'disabled');
+		} else {
+			console.log('Basket: Есть платные товары - активируем кнопку');
+			this._button.removeAttribute('disabled');
+		}
+	}
+
+	set items(items: IBasketItem[]) {
+		console.log('Basket: Установка товаров:', items);
+
 		this._list.innerHTML = '';
+
 		if (items.length) {
 			items.forEach((item) => {
 				this._list.appendChild(this.renderItem(item));
 			});
-			console.log('Basket: Активация кнопки после добавления товаров');
-			this._button.removeAttribute('disabled');
 		} else {
 			this._list.innerHTML = 'Корзина пуста';
-			console.log('Basket: Деактивация кнопки - корзина пуста');
-			this._button.setAttribute('disabled', 'disabled');
 		}
 
-		console.log('Basket: Состояние после обновления', {
-			listContent: this._list.innerHTML,
-			buttonDisabled: this._button.hasAttribute('disabled'),
-		});
+		this.updateButtonState(items);
 	}
 
 	set total(total: number) {
@@ -96,12 +112,7 @@ export class Basket extends Component<IBasketView> {
 	}
 
 	render(data: Pick<IBasketView, 'items' | 'total'>): HTMLElement {
-		console.log('Basket: Начало рендера', {
-			hasItems: !!data.items,
-			total: data.total,
-			currentListContent: this._list.innerHTML,
-			buttonDisabled: this._button.hasAttribute('disabled'),
-		});
+		console.log('Basket: Начало рендера', data);
 
 		if (data.items) {
 			this.items = data.items;
@@ -110,35 +121,9 @@ export class Basket extends Component<IBasketView> {
 			this.total = data.total;
 		}
 
-		// Проверяем состояние кнопки при каждом рендере
-		const isEmpty =
-			this._list.children.length === 0 ||
-			this._list.innerHTML === 'Корзина пуста';
-		console.log('Basket: Проверка состояния кнопки', {
-			isEmpty,
-			listChildren: this._list.children.length,
-			listContent: this._list.innerHTML,
-		});
-
-		if (isEmpty) {
-			console.log('Basket: Деактивация кнопки при рендере');
-			this._button.setAttribute('disabled', 'disabled');
-		} else {
-			console.log('Basket: Активация кнопки при рендере');
-			this._button.removeAttribute('disabled');
-		}
-
-		// Удаляем старые обработчики
-		this._button.removeEventListener('click', this.buttonClickHandler);
-		this._list.removeEventListener('click', this.listClickHandler);
-
-		// Добавляем новые обработчики
-		this._button.addEventListener('click', this.buttonClickHandler);
-		this._list.addEventListener('click', this.listClickHandler);
-
-		console.log('Basket: Завершение рендера', {
-			buttonDisabled: this._button.hasAttribute('disabled'),
-			listContent: this._list.innerHTML,
+		console.log('Basket: Состояние кнопки после рендера:', {
+			disabled: this._button.hasAttribute('disabled'),
+			items: data.items,
 		});
 
 		return this.container;

@@ -274,15 +274,24 @@ export class Page {
 
 		// Размещение заказа
 		this.events.on('order:submit', () => {
-			const orderData = {
-				payment: this.appState.getPaymentMethod() || 'online',
-				email: this.contactsForm.getEmail(),
-				phone: this.contactsForm.getPhone(),
-				address: this.contactsForm.getAddress(),
-				total: this.appState.calculateBasketTotal(),
-				items: this.appState.getBasketItems().map((item) => item.id),
-			};
-			this.appState.placeOrder(orderData);
+			const basketItems = this.appState.getBasketItems();
+			// Фильтруем только товары с ценой
+			const itemsWithPrice = basketItems.filter((item) => item.price !== null);
+
+			if (itemsWithPrice.length > 0) {
+				const orderData = {
+					payment: this.appState.getPaymentMethod() || 'online',
+					email: this.contactsForm.getEmail(),
+					phone: this.contactsForm.getPhone(),
+					address: this.contactsForm.getAddress(),
+					total: itemsWithPrice.reduce(
+						(sum, item) => sum + (item.price || 0),
+						0
+					),
+					items: itemsWithPrice.map((item) => item.id),
+				};
+				this.appState.placeOrder(orderData);
+			}
 		});
 
 		// Успешное размещение заказа
