@@ -63,30 +63,45 @@ export class Page {
 		) as HTMLElement;
 		this.modal = new Modal(modalContainer, this.events);
 
-		// Инициализация компонентов с использованием шаблонов
-		this.basketContainer = (
-			document.querySelector('#basket') as HTMLTemplateElement
-		).content.cloneNode(true) as HTMLElement;
+		// Создаем контейнеры из шаблонов один раз
+		const basketTemplate = document.querySelector(
+			'#basket'
+		) as HTMLTemplateElement;
+		this.basketContainer = basketTemplate.content.cloneNode(
+			true
+		) as HTMLElement;
 		this.basket = new Basket(this.basketContainer, this.events);
 
-		this.previewContainer = (
-			document.querySelector('#card-preview') as HTMLTemplateElement
-		).content.cloneNode(true) as HTMLElement;
+		const previewTemplate = document.querySelector(
+			'#card-preview'
+		) as HTMLTemplateElement;
+		this.previewContainer = previewTemplate.content.cloneNode(
+			true
+		) as HTMLElement;
 		this.preview = new Preview(this.previewContainer, this.events);
 
-		this.orderFormContainer = (
-			document.querySelector('#order') as HTMLTemplateElement
-		).content.cloneNode(true) as HTMLFormElement;
+		const orderTemplate = document.querySelector(
+			'#order'
+		) as HTMLTemplateElement;
+		this.orderFormContainer = orderTemplate.content.cloneNode(
+			true
+		) as HTMLFormElement;
 		this.orderForm = new Order(this.orderFormContainer, this.events);
 
-		this.contactsFormContainer = (
-			document.querySelector('#contacts') as HTMLTemplateElement
-		).content.cloneNode(true) as HTMLFormElement;
+		const contactsTemplate = document.querySelector(
+			'#contacts'
+		) as HTMLTemplateElement;
+		this.contactsFormContainer = contactsTemplate.content.cloneNode(
+			true
+		) as HTMLFormElement;
 		this.contactsForm = new Contacts(this.contactsFormContainer, this.events);
 
-		this.successContainer = (
-			document.querySelector('#success') as HTMLTemplateElement
-		).content.cloneNode(true) as HTMLElement;
+		const successTemplate = document.querySelector(
+			'#success'
+		) as HTMLTemplateElement;
+		this.successContainer = successTemplate.content.cloneNode(
+			true
+		) as HTMLElement;
 		this.success = new Success(this.successContainer, {
 			onClick: () => this.closeModal(),
 		});
@@ -142,9 +157,15 @@ export class Page {
 
 		// Открытие корзины
 		this.events.on('basket:open', () => {
-			this.basketContainer = (
-				document.querySelector('#basket') as HTMLTemplateElement
-			).content.cloneNode(true) as HTMLElement;
+			// Создаем новый контейнер из шаблона
+			const basketTemplate = document.querySelector(
+				'#basket'
+			) as HTMLTemplateElement;
+			this.basketContainer = basketTemplate.content.cloneNode(
+				true
+			) as HTMLElement;
+
+			// Создаем новый экземпляр корзины
 			this.basket = new Basket(this.basketContainer, this.events);
 
 			const basketItems = this.appState.getBasketItems();
@@ -152,6 +173,7 @@ export class Page {
 				items: basketItems,
 				total: this.appState.calculateBasketTotal(),
 			});
+
 			this.modal.render({
 				content: this.basketContainer,
 			});
@@ -210,6 +232,15 @@ export class Page {
 
 		// Открытие формы заказа
 		this.events.on('order:open', () => {
+			// Создаем новый экземпляр формы заказа
+			const orderTemplate = document.querySelector(
+				'#order'
+			) as HTMLTemplateElement;
+			this.orderFormContainer = orderTemplate.content.cloneNode(
+				true
+			) as HTMLFormElement;
+			this.orderForm = new Order(this.orderFormContainer, this.events);
+
 			this.modal.render({
 				content: this.orderFormContainer,
 			});
@@ -228,7 +259,16 @@ export class Page {
 		this.events.on<{ method: string }>(
 			'payment:method:changed',
 			({ method }) => {
+				console.log('Page: Получено событие payment:method:changed', {
+					method,
+				});
 				this.appState.setPaymentMethod(method as 'online' | 'cash');
+				// После обновления состояния в AppState, обновляем UI формы
+				this.orderForm.render({
+					payment: method,
+					valid: this.orderForm['validatePayment'](method),
+					errors: [], // Добавляем обязательное поле errors
+				});
 			}
 		);
 

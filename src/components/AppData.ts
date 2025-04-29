@@ -135,6 +135,10 @@ export class AppState extends Model<IAppState> {
 	}
 
 	private set(nextState: Partial<IAppState>): void {
+		console.log('AppState: Обновление состояния', {
+			currentState: this.state,
+			nextState: nextState,
+		});
 		this.state = { ...this.state, ...nextState };
 		this.emitChanges('state:updated', this.state);
 	}
@@ -236,11 +240,17 @@ export class AppState extends Model<IAppState> {
 	}
 
 	setPaymentMethod(method: 'online' | 'cash'): void {
+		console.log('AppState: setPaymentMethod вызван с методом', method);
 		this.set({ paymentMethod: method });
+		console.log(
+			'AppState: текущий метод оплаты после обновления',
+			this.state.paymentMethod
+		);
 		this.emitChanges('payment:method', { method });
 	}
 
 	getPaymentMethod(): 'online' | 'cash' | null {
+		console.log('AppState: getPaymentMethod вернул', this.state.paymentMethod);
 		return this.state.paymentMethod;
 	}
 }
