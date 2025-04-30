@@ -12,6 +12,20 @@ export class CardList extends Component<IProductList> {
 		this.events = events; // Сохраняем events локально
 	}
 
+	// Получить все карточки
+	getCards(): Card[] {
+		return this.items;
+	}
+
+	// Найти карточку по ID продукта
+	getCardById(productId: string): Card | undefined {
+		return this.items.find((card) => {
+			const data = card.getProduct();
+
+			return data?.id === productId;
+		});
+	}
+
 	render(data?: Partial<IProductList>): HTMLElement {
 		const products = data?.items || [];
 
@@ -26,7 +40,9 @@ export class CardList extends Component<IProductList> {
 			const cardElement = cardFragment.firstElementChild as HTMLElement;
 			const card = new Card(cardElement, this.events);
 			card.render(product);
+
 			this.container.append(cardElement);
+
 			return card;
 		});
 

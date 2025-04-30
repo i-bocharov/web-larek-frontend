@@ -18,6 +18,7 @@ export class Header extends Component<{}> {
 		const basketButton = this.container.querySelector(
 			'.header__basket'
 		) as HTMLButtonElement;
+
 		basketButton.addEventListener('click', () => {
 			this.events.emit('basket:open');
 		});

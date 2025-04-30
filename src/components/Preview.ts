@@ -43,6 +43,7 @@ export class Preview extends Component<IProduct> {
 		});
 
 		this.container.replaceChildren(preview);
+
 		return this.container; // Возвращаем контейнер для совместимости с базовым классом
 	}
 }

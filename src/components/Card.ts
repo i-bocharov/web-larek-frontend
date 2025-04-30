@@ -5,6 +5,7 @@ import { IProduct } from '../types';
 export class Card extends Component<IProduct> {
 	private events: IEvents;
 	private productId: string | null = null;
+	private product: IProduct | null = null;
 
 	constructor(container: HTMLElement, events: IEvents) {
 		super(container);
@@ -17,19 +18,35 @@ export class Card extends Component<IProduct> {
 		});
 	}
 
-	render(product: IProduct): HTMLElement {
-		// ...existing code...
-		this.container.querySelector('.card__category')!.textContent =
-			product.category;
-		this.container.querySelector('.card__title')!.textContent = product.title;
-		this.container.querySelector('.card__price')!.textContent = `${
-			product.price ?? 'Бесплатно'
-		} синапсов`;
-		this.container
-			.querySelector('.card__image')!
-			.setAttribute('src', product.image);
+	// Получить данные о продукте
+	getProduct(): IProduct | null {
+		return this.product;
+	}
 
-		this.productId = product.id; // сохраняем id для обработчика
+	render(product: IProduct): HTMLElement {
+		this.product = product;
+		this.productId = product.id;
+
+		const categoryEl = this.container.querySelector('.card__category');
+		const titleEl = this.container.querySelector('.card__title');
+		const priceEl = this.container.querySelector('.card__price');
+		const imageEl = this.container.querySelector(
+			'.card__image'
+		) as HTMLImageElement;
+
+		if (categoryEl) {
+			categoryEl.textContent = product.category;
+		}
+		if (titleEl) {
+			titleEl.textContent = product.title;
+		}
+		if (priceEl) {
+			priceEl.textContent = `${product.price ?? 'Бесплатно'} синапсов`;
+		}
+		if (imageEl) {
+			imageEl.src = product.image;
+			imageEl.alt = product.title;
+		}
 
 		return this.container;
 	}

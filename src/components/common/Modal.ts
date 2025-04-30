@@ -7,19 +7,22 @@ interface IModalData {
 }
 
 export class Modal extends Component<IModalData> {
-	protected _closeButton: HTMLButtonElement;
-	protected _content: HTMLElement;
+	protected closeButtonElement: HTMLButtonElement;
+	protected contentElement: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 
-		this._closeButton = ensureElement<HTMLButtonElement>(
+		this.closeButtonElement = ensureElement<HTMLButtonElement>(
 			'.modal__close',
 			container
 		);
-		this._content = ensureElement<HTMLElement>('.modal__content', container);
+		this.contentElement = ensureElement<HTMLElement>(
+			'.modal__content',
+			container
+		);
 
-		this._closeButton.addEventListener('click', () => this.close());
+		this.closeButtonElement.addEventListener('click', () => this.close());
 		this.container.addEventListener('click', (event) => {
 			if (event.target === this.container) {
 				this.close();
@@ -28,12 +31,15 @@ export class Modal extends Component<IModalData> {
 	}
 
 	set content(value: HTMLElement | DocumentFragment) {
-		const element =
-			value instanceof DocumentFragment
-				? (value.firstElementChild as HTMLElement)
-				: value;
-		if (element) {
-			this._content.replaceChildren(element);
+		// Очищаем текущее содержимое
+		this.contentElement.replaceChildren();
+
+		if (value instanceof DocumentFragment) {
+			if (value.firstElementChild) {
+				this.contentElement.appendChild(value.firstElementChild);
+			}
+		} else if (value) {
+			this.contentElement.appendChild(value);
 		}
 	}
 
@@ -44,7 +50,7 @@ export class Modal extends Component<IModalData> {
 
 	close() {
 		this.container.classList.remove('modal_active');
-		this._content.replaceChildren();
+		this.contentElement.replaceChildren();
 		this.events.emit('modal:close');
 	}
 
@@ -61,10 +67,10 @@ export class Modal extends Component<IModalData> {
 	}
 
 	getButton(): HTMLElement | null {
-		return this._content.querySelector('.card__button');
+		return this.contentElement.querySelector('.card__button');
 	}
 
 	getContent(): HTMLElement {
-		return this._content;
+		return this.contentElement;
 	}
 }

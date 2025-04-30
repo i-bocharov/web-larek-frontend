@@ -20,12 +20,15 @@ export class ProductModel extends Model<IProduct> {
 	async loadProducts(): Promise<{ products: IProduct[] }> {
 		try {
 			const productList = await this.api.getProducts();
+
 			this.emitChanges('products:loaded', { products: productList.items });
+
 			return { products: productList.items }; // Возвращаем продукты
 		} catch (error) {
 			this.emitChanges('products:error', {
 				error: 'Ошибка при загрузке продуктов',
 			});
+
 			throw error; // Пробрасываем ошибку для обработки выше
 		}
 	}
@@ -94,6 +97,7 @@ export class OrderModel extends Model<IOrder> {
 		}
 
 		this.emitChanges('formErrors:change', errors);
+
 		return Object.keys(errors).length === 0;
 	}
 }
@@ -135,10 +139,6 @@ export class AppState extends Model<IAppState> {
 	}
 
 	private set(nextState: Partial<IAppState>): void {
-		console.log('AppState: Обновление состояния', {
-			currentState: this.state,
-			nextState: nextState,
-		});
 		this.state = { ...this.state, ...nextState };
 		this.emitChanges('state:updated', this.state);
 	}
@@ -187,14 +187,17 @@ export class AppState extends Model<IAppState> {
 		if (!this.state.catalog.length) {
 			return [];
 		}
+
 		return this.state.basket
 			.map((productId) => {
 				const product = this.state.catalog.find(
 					(item) => item.id === productId
 				);
+
 				if (!product) {
 					return null;
 				}
+
 				return {
 					id: product.id,
 					title: product.title,
@@ -209,8 +212,10 @@ export class AppState extends Model<IAppState> {
 		if (!this.state.catalog.length) {
 			return 0;
 		}
+
 		return this.state.basket.reduce((total, productId) => {
 			const product = this.state.catalog.find((item) => item.id === productId);
+
 			return total + (product?.price || 0);
 		}, 0);
 	}
@@ -218,9 +223,11 @@ export class AppState extends Model<IAppState> {
 	async placeOrder(orderData: IOrder): Promise<void> {
 		try {
 			this.set({ loading: true });
+
 			if (!this.orderModel.validateOrder(orderData)) {
 				return; // Валидация не пройдена
 			}
+
 			await this.orderModel.placeOrder(orderData);
 			this.set({ order: orderData }); // Обновляем состояние заказа
 			this.clearBasket(); // Очищаем корзину после успешного заказа
@@ -236,21 +243,16 @@ export class AppState extends Model<IAppState> {
 
 	updateBasketCounter(): void {
 		const count = this.state.basket.length;
+
 		this.emitChanges('basket:counter', { count });
 	}
 
 	setPaymentMethod(method: 'online' | 'cash'): void {
-		console.log('AppState: setPaymentMethod вызван с методом', method);
 		this.set({ paymentMethod: method });
-		console.log(
-			'AppState: текущий метод оплаты после обновления',
-			this.state.paymentMethod
-		);
 		this.emitChanges('payment:method', { method });
 	}
 
 	getPaymentMethod(): 'online' | 'cash' | null {
-		console.log('AppState: getPaymentMethod вернул', this.state.paymentMethod);
 		return this.state.paymentMethod;
 	}
 }

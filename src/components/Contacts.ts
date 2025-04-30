@@ -6,24 +6,12 @@ import { IFormState } from '../types';
 export class Contacts extends Form<IOrder> {
 	constructor(container: HTMLFormElement, events: EventEmitter) {
 		super(container, events);
-		console.log('Contacts: Constructor вызван', {
-			formElement: container.outerHTML,
-			name: container.name,
-		});
 
 		// Подписываемся на событие submit
 		const submitEventName = `${this.container.name}:submit`;
-		console.log('Contacts: Подписка на событие submit', { submitEventName });
 
 		this.events.on(submitEventName, () => {
-			console.log('Contacts: Получено событие submit', {
-				email: this.getEmail(),
-				phone: this.getPhone(),
-				valid: this.valid,
-			});
-
 			if (this.valid) {
-				console.log('Contacts: Форма валидна, эмитим order:submit');
 				this.events.emit('order:submit');
 			}
 		});
@@ -47,13 +35,6 @@ export class Contacts extends Form<IOrder> {
 						phone
 					);
 
-				console.log('Contacts: Валидация формы', {
-					email,
-					phone,
-					isValidEmail,
-					isValidPhone,
-				});
-
 				this.valid = isValidEmail && isValidPhone;
 			};
 
@@ -63,7 +44,6 @@ export class Contacts extends Form<IOrder> {
 	}
 
 	render(state: Partial<IOrder> & IFormState): HTMLFormElement {
-		console.log('Contacts: Рендер формы', state);
 		return super.render({
 			...state,
 			errors: state.errors || [],
@@ -75,7 +55,7 @@ export class Contacts extends Form<IOrder> {
 			'input[name="email"]'
 		) as HTMLInputElement;
 		const value = emailInput?.value || '';
-		console.log('Contacts: getEmail вызван', { value });
+
 		return value;
 	}
 
@@ -84,7 +64,7 @@ export class Contacts extends Form<IOrder> {
 			'input[name="phone"]'
 		) as HTMLInputElement;
 		const value = phoneInput?.value || '';
-		console.log('Contacts: getPhone вызван', { value });
+
 		return value;
 	}
 }

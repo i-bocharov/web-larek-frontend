@@ -146,6 +146,7 @@ export class Page {
 
 			// Устанавливаем правильный текст кнопки
 			const button = previewElement.querySelector('.card__button');
+
 			if (button) {
 				button.textContent = isInBasket ? 'Убрать из корзины' : 'В корзину';
 			}
@@ -188,6 +189,7 @@ export class Page {
 
 				// Обновляем текст кнопки в модальном окне
 				const button = this.modal.getButton();
+
 				if (button) {
 					button.textContent = 'Убрать из корзины';
 				}
@@ -203,6 +205,7 @@ export class Page {
 
 				// Если открыта корзина, обновляем её содержимое
 				const modalContent = this.modal.getContent();
+
 				if (modalContent.querySelector('.basket')) {
 					const basketItems = this.appState.getBasketItems();
 					this.basket.render({
@@ -213,6 +216,7 @@ export class Page {
 
 				// Обновляем текст кнопки в модальном окне
 				const button = this.modal.getButton();
+
 				if (button) {
 					button.textContent = 'В корзину';
 				}
@@ -232,8 +236,6 @@ export class Page {
 
 		// Открытие формы заказа
 		this.events.on('order:open', () => {
-			console.log('Page: Открытие формы заказа');
-
 			// Создаем новый экземпляр формы заказа
 			const orderTemplate = document.querySelector(
 				'#order'
@@ -248,11 +250,6 @@ export class Page {
 			// Убеждаемся, что у формы есть имя
 			formElement.name = 'order';
 
-			console.log('Page: Создание формы заказа', {
-				formElement: formElement.outerHTML,
-				name: formElement.name,
-			});
-
 			this.orderForm = new Order(formElement, this.events);
 
 			this.modal.render({
@@ -263,8 +260,6 @@ export class Page {
 		// Валидация и переход к форме контактов
 		this.events.on('order:form-open', () => {
 			if (this.orderForm.valid) {
-				console.log('Page: Открытие формы контактов');
-
 				// Создаем новый экземпляр формы контактов
 				const contactsTemplate = document.querySelector(
 					'#contacts'
@@ -279,11 +274,6 @@ export class Page {
 				// Убеждаемся, что у формы есть имя
 				formElement.name = 'contacts';
 
-				console.log('Page: Создание формы контактов', {
-					formElement: formElement.outerHTML,
-					name: formElement.name,
-				});
-
 				this.contactsForm = new Contacts(formElement, this.events);
 
 				this.modal.render({
@@ -296,9 +286,6 @@ export class Page {
 		this.events.on<{ method: string }>(
 			'payment:method:changed',
 			({ method }) => {
-				console.log('Page: Получено событие payment:method:changed', {
-					method,
-				});
 				this.appState.setPaymentMethod(method as 'online' | 'cash');
 				// После обновления состояния в AppState, обновляем UI формы
 				this.orderForm.render({

@@ -60,7 +60,7 @@ export interface IFormState {
 }
 
 export interface IBasketView {
-	items: IBasketItem[];
-	total: number;
-	selected: string[];
+	items: IBasketItem[]; // Массив продуктов в корзине с их количеством
+	total: number; // Общая стоимость всех продуктов в корзине
+	selected: string[]; // Массив ID выбранных продуктов (например, для удаления)
 }

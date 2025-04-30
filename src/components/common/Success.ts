@@ -10,28 +10,28 @@ interface ISuccessActions {
 }
 
 export class Success extends Component<ISuccess> {
-	protected _close: HTMLElement;
-	protected _description: HTMLElement;
+	protected closeElement: HTMLElement;
+	protected descriptionElement: HTMLElement;
 
 	constructor(container: HTMLElement, actions: ISuccessActions) {
 		super(container);
 
-		this._close = ensureElement<HTMLElement>(
+		this.closeElement = ensureElement<HTMLElement>(
 			'.order-success__close',
 			container
 		);
-		this._description = ensureElement<HTMLElement>(
+		this.descriptionElement = ensureElement<HTMLElement>(
 			'.order-success__description',
 			container
 		);
 
 		if (actions?.onClick) {
-			this._close.addEventListener('click', actions.onClick);
+			this.closeElement.addEventListener('click', actions.onClick);
 		}
 	}
 
 	render(data: ISuccess): HTMLElement {
-		this._description.textContent = `Списано ${formatNumber(
+		this.descriptionElement.textContent = `Списано ${formatNumber(
 			data.total
 		)} синапсов`;
 		return this.container;
