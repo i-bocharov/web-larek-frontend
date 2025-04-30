@@ -29,7 +29,7 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 				...data,
 				items: data.items.map((item) => ({
 					...item,
-					image: this.cdn + item.image,
+					image: this.cdn + item.image.replace('.svg', '.png'),
 				})),
 			};
 		});
@@ -45,7 +45,7 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 				// Добавляем CDN к пути изображения
 				return {
 					...data,
-					image: this.cdn + (data as IProduct).image,
+					image: this.cdn + (data as IProduct).image.replace('.svg', '.png'),
 				};
 			}
 		);
