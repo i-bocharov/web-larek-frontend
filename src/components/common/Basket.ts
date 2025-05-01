@@ -56,15 +56,15 @@ export class Basket extends Component<IBasketView> {
 
 	protected renderItem(item: IBasketItem): HTMLElement {
 		const itemElement = document.createElement('li');
-		itemElement.classList.add('basket__item');
+		itemElement.classList.add(...['basket__item', 'card', 'card_compact']);
 		itemElement.setAttribute('data-id', item.id);
 
 		const titleSpan = document.createElement('span');
-		titleSpan.classList.add('card-title');
+		titleSpan.classList.add('card__title');
 		titleSpan.textContent = item.title;
 
 		const priceSpan = document.createElement('span');
-		priceSpan.classList.add('card-price');
+		priceSpan.classList.add('card__price');
 		priceSpan.textContent =
 			item.price === null
 				? 'Бесплатно'
