@@ -7,16 +7,14 @@ export class Contacts extends Form<IOrder> {
 	constructor(container: HTMLFormElement, events: EventEmitter) {
 		super(container, events);
 
-		// Подписываемся на событие submit
 		const submitEventName = `${this.container.name}:submit`;
 
 		this.events.on(submitEventName, () => {
-			if (this.valid) {
+			if (this.validateForm()) {
 				this.events.emit('order:submit');
 			}
 		});
 
-		// Добавляем обработчики для email и phone
 		const emailInput = this.container.querySelector(
 			'input[name="email"]'
 		) as HTMLInputElement;
@@ -26,16 +24,28 @@ export class Contacts extends Form<IOrder> {
 
 		if (emailInput && phoneInput) {
 			const validateForm = () => {
+				this.errors = [];
 				const email = this.getEmail();
 				const phone = this.getPhone();
 
-				const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-				const isValidPhone =
-					/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
-						phone
-					);
+				if (!email) {
+					this.errors.push('Email обязателен');
+				} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+					this.errors.push('Некорректный формат email');
+				}
 
-				this.valid = isValidEmail && isValidPhone;
+				if (!phone) {
+					this.errors.push('Телефон обязателен');
+				} else if (
+					!/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
+						phone
+					)
+				) {
+					this.errors.push('Некорректный формат телефона');
+				}
+
+				this.valid = this.errors.length === 0;
+				this.render({ errors: this.errors, valid: this.valid });
 			};
 
 			emailInput.addEventListener('input', validateForm);
@@ -43,28 +53,53 @@ export class Contacts extends Form<IOrder> {
 		}
 	}
 
+	protected validateForm(): boolean {
+		const email = this.getEmail();
+		const phone = this.getPhone();
+
+		this.errors = [];
+
+		if (!email) {
+			this.errors.push('Email обязателен');
+		} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			this.errors.push('Некорректный формат email');
+		}
+
+		if (!phone) {
+			this.errors.push('Телефон обязателен');
+		} else if (
+			!/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
+				phone
+			)
+		) {
+			this.errors.push('Некорректный формат телефона');
+		}
+
+		this.valid = this.errors.length === 0;
+		this.render({ errors: this.errors, valid: this.valid });
+		return this.valid;
+	}
+
 	render(state: Partial<IOrder> & IFormState): HTMLFormElement {
-		return super.render({
+		const result = super.render({
 			...state,
-			errors: state.errors || [],
+			errors: this.errors,
+			valid: this.valid,
 		});
+		return result;
 	}
 
 	getEmail(): string {
-		const emailInput = this.container.querySelector(
-			'input[name="email"]'
-		) as HTMLInputElement;
-		const value = emailInput?.value || '';
-
-		return value;
+		return (
+			(this.container.querySelector('input[name="email"]') as HTMLInputElement)
+				?.value || ''
+		);
 	}
 
 	getPhone(): string {
-		const phoneInput = this.container.querySelector(
-			'input[name="phone"]'
-		) as HTMLInputElement;
-		const value = phoneInput?.value || '';
-
-		return value;
+		return (
+			(this.container.querySelector('input[name="phone"]') as HTMLInputElement)
+				?.value || ''
+		);
 	}
 }

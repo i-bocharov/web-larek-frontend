@@ -11,81 +11,60 @@ export class Order extends Form<IOrder> {
 	constructor(container: HTMLFormElement, protected events: EventEmitter) {
 		super(container, events);
 
-		// Находим все кнопки методов оплаты и инициализируем их
-		const buttons = this.container.querySelectorAll('.order__buttons .button');
+		this.paymentButtonsElement = {
+			card: container.querySelector('button[name="card"]') as HTMLButtonElement,
+			cash: container.querySelector('button[name="cash"]') as HTMLButtonElement,
+		};
 
-		buttons.forEach((button) => {
-			const buttonEl = button as HTMLButtonElement;
-			const name = buttonEl.getAttribute('name');
+		Object.entries(this.paymentButtonsElement).forEach(([method, element]) => {
+			element.addEventListener('click', () => {
+				const methodName = method === 'card' ? 'online' : 'cash';
+				this.events.emit('payment:method:changed', { method: methodName });
+				this.validateForm();
+			});
+		});
 
-			if (name) {
-				this.paymentButtonsElement[name] = buttonEl;
+		const submitEventName = `${this.container.name}:submit`;
+		this.events.on(submitEventName, () => {
+			if (this.validateForm()) {
+				this.events.emit('order:form-open');
 			}
 		});
 
-		// Инициализируем обработчик кликов по кнопкам оплаты
-		this.container
-			.querySelector('.order__buttons')
-			?.addEventListener('click', (event: Event) => {
-				const target = event.target as HTMLElement;
-
-				if (target.classList.contains('button')) {
-					const method =
-						target.getAttribute('name') === 'card' ? 'online' : 'cash';
-
-					this.payment = method;
-					this.setPaymentMethod(method);
-					this.events.emit('payment:method:changed', { method });
-					this.validateForm();
-				}
-			});
-
-		// Инициализируем обработчик изменения адреса
 		const addressInput = this.container.querySelector(
 			'input[name="address"]'
 		) as HTMLInputElement;
-
 		if (addressInput) {
 			addressInput.addEventListener('input', () => {
 				this.address = addressInput.value.trim();
-
 				this.validateForm();
 			});
 		}
 
-		// Подписываемся на событие submit формы заказа
-		const submitEventName = `${this.container.name}:submit`;
-
-		this.events.on(submitEventName, () => {
-			this.validateForm(); // Добавляем валидацию перед проверкой
-
-			if (this.valid) {
-				this.events.emit('order:form-open');
-			} else {
-				console.error('Order: Форма не валидна, отправка отменена');
-			}
-		});
-
-		// Инициализируем начальное состояние
 		this.payment = '';
 		this.address = '';
-		this.valid = false; // Явно устанавливаем начальное значение valid
-
-		// Выполняем начальную валидацию формы
+		this.valid = false;
 		this.validateForm();
 	}
 
 	protected validatePayment(payment: string): boolean {
-		const isValid = payment === 'online' || payment === 'cash';
-
-		return isValid;
+		return payment === 'online' || payment === 'cash';
 	}
 
-	protected validateForm(): void {
-		const isValid =
-			this.validatePayment(this.payment) && this.address.length > 0;
+	protected validateForm(): boolean {
+		this.errors = [];
 
-		this.valid = isValid;
+		if (!this.validatePayment(this.payment)) {
+			this.errors.push('Выберите способ оплаты');
+		}
+
+		if (!this.address.length) {
+			this.errors.push('Укажите адрес доставки');
+		}
+
+		this.valid = this.errors.length === 0;
+		this.render({ errors: this.errors, valid: this.valid });
+		return this.valid;
 	}
 
 	setPaymentMethod(method: string): void {
@@ -93,24 +72,17 @@ export class Order extends Form<IOrder> {
 		Object.values(this.paymentButtonsElement).forEach((button) => {
 			const isActive =
 				button.getAttribute('name') === (method === 'online' ? 'card' : 'cash');
-
 			button.classList.toggle('button_alt-active', isActive);
 		});
+		this.validateForm();
 	}
 
-	public getAddress(): string {
-		const address =
-			(
-				this.container.querySelector(
-					'input[name="address"]'
-				) as HTMLInputElement
-			)?.value || '';
-
-		return address;
+	getAddress(): string {
+		return this.address;
 	}
 
 	render(state: Partial<IOrder> & IFormState): HTMLFormElement {
-		const { address, payment, errors } = state;
+		const { address, payment, errors = this.errors } = state;
 
 		if (payment) {
 			this.payment = payment;
@@ -119,21 +91,18 @@ export class Order extends Form<IOrder> {
 
 		if (address) {
 			this.address = address;
-
 			const addressInput = this.container.querySelector(
 				'input[name="address"]'
 			) as HTMLInputElement;
-
 			if (addressInput) {
 				addressInput.value = address;
 			}
 		}
 
-		this.validateForm();
-
 		const result = super.render({
 			...state,
-			errors: errors || [],
+			errors,
+			valid: this.valid,
 		});
 
 		return result;

@@ -10,6 +10,7 @@ interface IFormState {
 export class Form<T> extends Component<IFormState> {
 	protected submitButtonElement: HTMLButtonElement;
 	protected errorsElement: HTMLElement;
+	protected errors: string[] = [];
 	private _valid: boolean = false;
 
 	constructor(protected container: HTMLFormElement, protected events: IEvents) {
@@ -53,13 +54,17 @@ export class Form<T> extends Component<IFormState> {
 		return this._valid;
 	}
 
-	set errors(value: string) {
-		this.setText(this.errorsElement, value);
+	protected setErrors(errors: string[]) {
+		this.errors = errors;
+		this.errorsElement.textContent = errors.join(', ');
 	}
 
 	render(state: Partial<T> & IFormState) {
-		const { valid, errors, ...inputs } = state;
-		super.render({ valid, errors });
+		const { valid, errors = [], ...inputs } = state;
+		if (valid !== undefined) {
+			this.valid = valid;
+		}
+		this.setErrors(errors);
 		Object.assign(this, inputs);
 		return this.container;
 	}
