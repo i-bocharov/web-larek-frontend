@@ -1,17 +1,17 @@
-import { Component } from '../base/Component';
-import { ensureElement, formatNumber } from '../../utils/utils';
+import { View } from '../base/Component';
+import { ensureElement, cloneTemplate, createElement } from '../../utils/utils';
 import { EventEmitter } from '../base/Events';
-import { IBasketView, IBasketItem } from '../../types';
+import { IBasketView } from '../../types';
 
-export class Basket extends Component<IBasketView> {
+export class Basket extends View<IBasketView> {
+	static template = ensureElement<HTMLTemplateElement>('#basket');
+
 	protected listElement: HTMLElement;
 	protected totalElement: HTMLElement;
 	protected buttonElement: HTMLElement;
-	private buttonClickHandler: () => void;
-	private listClickHandler: (e: MouseEvent) => void;
 
-	constructor(container: HTMLElement, protected events: EventEmitter) {
-		super(container);
+	constructor(events: EventEmitter) {
+		super(events, cloneTemplate(Basket.template));
 
 		this.listElement = ensureElement<HTMLElement>(
 			'.basket__list',
@@ -26,116 +26,28 @@ export class Basket extends Component<IBasketView> {
 			this.container
 		);
 
-		this.buttonClickHandler = () => {
-			// Событие клика обрабатываем, только если кнопка не отключена
-			if (!this.buttonElement.hasAttribute('disabled')) {
-				this.events.emit('order:open');
-			}
-		};
-
-		this.listClickHandler = (e: MouseEvent) => {
-			const target = e.target as HTMLElement;
-
-			if (target.classList.contains('basket__item-delete')) {
-				const item = target.closest('.basket__item');
-
-				if (item) {
-					const itemId = item.getAttribute('data-id');
-
-					if (itemId) {
-						this.events.emit('basket:item-removed', { productId: itemId });
-					}
-				}
-			}
-		};
-
-		// Инициализируем обработчики событий
-		this.buttonElement.addEventListener('click', this.buttonClickHandler);
-		this.listElement.addEventListener('click', this.listClickHandler);
-	}
-
-	protected renderItem(item: IBasketItem, index: number): HTMLElement {
-		const itemElement = document.createElement('li');
-		itemElement.classList.add(...['basket__item', 'card', 'card_compact']);
-		itemElement.setAttribute('data-id', item.id);
-
-		const indexSpan = document.createElement('span');
-		indexSpan.classList.add('basket__item-index');
-		this.setText(indexSpan, (index + 1).toString());
-
-		const titleSpan = document.createElement('span');
-		titleSpan.classList.add('card__title');
-		this.setText(titleSpan, item.title);
-
-		const priceSpan = document.createElement('span');
-		priceSpan.classList.add('card__price');
-		this.setText(
-			priceSpan,
-			item.price === null ? 'Бесплатно' : `${formatNumber(item.price)} синапсов`
-		);
-
-		const deleteButton = document.createElement('button');
-		deleteButton.classList.add('basket__item-delete');
-		deleteButton.type = 'button';
-
-		itemElement.appendChild(indexSpan);
-		itemElement.appendChild(titleSpan);
-		itemElement.appendChild(priceSpan);
-		itemElement.appendChild(deleteButton);
-
-		return itemElement;
-	}
-
-	private updateButtonState(items: IBasketItem[]): void {
-		// Проверяем пустая ли корзина
-		if (!items.length) {
-			this.buttonElement.setAttribute('disabled', 'disabled');
-			return;
-		}
-
-		// Проверяем все ли товары бесплатные
-		const allItemsFree = items.every((item) => {
-			const isFree = item.price === null;
-
-			return isFree;
+		this.buttonElement.addEventListener('click', () => {
+			events.emit('order:open');
 		});
 
-		if (allItemsFree) {
-			this.buttonElement.setAttribute('disabled', 'disabled');
-		} else {
-			this.buttonElement.removeAttribute('disabled');
-		}
+		this.items = [];
 	}
 
-	set items(items: IBasketItem[]) {
-		// Очищаем список через replaceChildren
-		this.listElement.replaceChildren();
-
+	set items(items: HTMLElement[]) {
 		if (items.length) {
-			items.forEach((item, idx) => {
-				this.listElement.appendChild(this.renderItem(item, idx));
-			});
+			this.listElement.replaceChildren(...items);
+			this.buttonElement.removeAttribute('disabled');
 		} else {
-			const emptyMessage = document.createElement('span');
-			this.setText(emptyMessage, 'Корзина пуста');
-			this.listElement.appendChild(emptyMessage);
+			this.listElement.replaceChildren(
+				createElement<HTMLParagraphElement>('p', {
+					textContent: 'Корзина пуста',
+				})
+			);
+			this.buttonElement.setAttribute('disabled', 'disabled');
 		}
-
-		this.updateButtonState(items);
 	}
 
 	set total(total: number) {
-		this.setText(this.totalElement, `${formatNumber(total)} синапсов`);
-	}
-
-	render(data: Pick<IBasketView, 'items' | 'total'>): HTMLElement {
-		if (data.items) {
-			this.items = data.items;
-		}
-		if (data.total !== undefined) {
-			this.total = data.total;
-		}
-
-		return this.container;
+		this.setText(this.totalElement, `${total} синапсов`);
 	}
 }
