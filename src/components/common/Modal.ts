@@ -79,10 +79,6 @@ export class Modal extends Component<IModalData> {
 		return this.container.classList.contains('modal_active');
 	}
 
-	getButton(): HTMLElement | null {
-		return this.contentElement.querySelector('.card__button');
-	}
-
 	getContent(): HTMLElement {
 		return this.contentElement;
 	}
