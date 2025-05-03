@@ -22,12 +22,13 @@ export class Preview extends Component<IProduct> {
 		) as HTMLTemplateElement;
 		const preview = template.content.cloneNode(true) as HTMLElement;
 
-		preview.querySelector('.card__category')!.textContent = product.category;
-		preview.querySelector('.card__title')!.textContent = product.title;
-		preview.querySelector('.card__text')!.textContent = product.description;
-		preview.querySelector('.card__price')!.textContent = `${
-			product.price ?? 'Бесплатно'
-		} синапсов`;
+		this.setText(preview.querySelector('.card__category'), product.category);
+		this.setText(preview.querySelector('.card__title'), product.title);
+		this.setText(preview.querySelector('.card__text'), product.description);
+		this.setText(
+			preview.querySelector('.card__price'),
+			`${product.price ?? 'Бесплатно'} синапсов`
+		);
 		preview.querySelector('.card__image')!.setAttribute('src', product.image);
 
 		const addToBasketButton = preview.querySelector(

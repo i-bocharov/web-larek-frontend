@@ -25,6 +25,6 @@ export class Header extends Component<{}> {
 	}
 
 	updateBasketCounter(count: number): void {
-		this.basketCounter.textContent = count.toString();
+		this.setText(this.basketCounter, count.toString());
 	}
 }

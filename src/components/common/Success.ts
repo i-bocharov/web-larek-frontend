@@ -31,9 +31,10 @@ export class Success extends Component<ISuccess> {
 	}
 
 	render(data: ISuccess): HTMLElement {
-		this.descriptionElement.textContent = `Списано ${formatNumber(
-			data.total
-		)} синапсов`;
+		this.setText(
+			this.descriptionElement,
+			`Списано ${formatNumber(data.total)} синапсов`
+		);
 		return this.container;
 	}
 }

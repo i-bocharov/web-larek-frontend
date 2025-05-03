@@ -72,7 +72,7 @@ export class Order extends Form<IOrder> {
 		Object.values(this.paymentButtonsElement).forEach((button) => {
 			const isActive =
 				button.getAttribute('name') === (method === 'online' ? 'card' : 'cash');
-			button.classList.toggle('button_alt-active', isActive);
+			this.toggleClass(button, 'button_alt-active', isActive);
 		});
 		this.validateForm();
 	}

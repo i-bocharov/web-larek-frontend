@@ -54,26 +54,31 @@ export class Basket extends Component<IBasketView> {
 		this.listElement.addEventListener('click', this.listClickHandler);
 	}
 
-	protected renderItem(item: IBasketItem): HTMLElement {
+	protected renderItem(item: IBasketItem, index: number): HTMLElement {
 		const itemElement = document.createElement('li');
 		itemElement.classList.add(...['basket__item', 'card', 'card_compact']);
 		itemElement.setAttribute('data-id', item.id);
 
+		const indexSpan = document.createElement('span');
+		indexSpan.classList.add('basket__item-index');
+		this.setText(indexSpan, (index + 1).toString());
+
 		const titleSpan = document.createElement('span');
 		titleSpan.classList.add('card__title');
-		titleSpan.textContent = item.title;
+		this.setText(titleSpan, item.title);
 
 		const priceSpan = document.createElement('span');
 		priceSpan.classList.add('card__price');
-		priceSpan.textContent =
-			item.price === null
-				? 'Бесплатно'
-				: `${formatNumber(item.price)} синапсов`;
+		this.setText(
+			priceSpan,
+			item.price === null ? 'Бесплатно' : `${formatNumber(item.price)} синапсов`
+		);
 
 		const deleteButton = document.createElement('button');
 		deleteButton.classList.add('basket__item-delete');
 		deleteButton.type = 'button';
 
+		itemElement.appendChild(indexSpan);
 		itemElement.appendChild(titleSpan);
 		itemElement.appendChild(priceSpan);
 		itemElement.appendChild(deleteButton);
@@ -107,12 +112,12 @@ export class Basket extends Component<IBasketView> {
 		this.listElement.replaceChildren();
 
 		if (items.length) {
-			items.forEach((item) => {
-				this.listElement.appendChild(this.renderItem(item));
+			items.forEach((item, idx) => {
+				this.listElement.appendChild(this.renderItem(item, idx));
 			});
 		} else {
 			const emptyMessage = document.createElement('span');
-			emptyMessage.textContent = 'Корзина пуста';
+			this.setText(emptyMessage, 'Корзина пуста');
 			this.listElement.appendChild(emptyMessage);
 		}
 
@@ -120,7 +125,7 @@ export class Basket extends Component<IBasketView> {
 	}
 
 	set total(total: number) {
-		this.totalElement.textContent = `${formatNumber(total)} синапсов`;
+		this.setText(this.totalElement, `${formatNumber(total)} синапсов`);
 	}
 
 	render(data: Pick<IBasketView, 'items' | 'total'>): HTMLElement {

@@ -27,21 +27,23 @@ export class Card extends Component<IProduct> {
 		this.product = product;
 		this.productId = product.id;
 
-		const categoryEl = this.container.querySelector('.card__category');
-		const titleEl = this.container.querySelector('.card__title');
-		const priceEl = this.container.querySelector('.card__price');
+		const categoryEl = this.container.querySelector(
+			'.card__category'
+		) as HTMLElement;
+		const titleEl = this.container.querySelector('.card__title') as HTMLElement;
+		const priceEl = this.container.querySelector('.card__price') as HTMLElement;
 		const imageEl = this.container.querySelector(
 			'.card__image'
 		) as HTMLImageElement;
 
 		if (categoryEl) {
-			categoryEl.textContent = product.category;
+			this.setText(categoryEl, product.category);
 		}
 		if (titleEl) {
-			titleEl.textContent = product.title;
+			this.setText(titleEl, product.title);
 		}
 		if (priceEl) {
-			priceEl.textContent = `${product.price ?? 'Бесплатно'} синапсов`;
+			this.setText(priceEl, `${product.price ?? 'Бесплатно'} синапсов`);
 		}
 		if (imageEl) {
 			imageEl.src = product.image;
