@@ -1,7 +1,6 @@
 // ToDo
 // AppData
 // CardList
-// Contacts
 // index
 
 import './scss/styles.scss';
