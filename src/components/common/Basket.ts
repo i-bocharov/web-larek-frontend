@@ -11,7 +11,7 @@ export class Basket extends View<IBasketView> {
 	protected buttonElement: HTMLElement;
 
 	constructor(events: EventEmitter) {
-		super(events, cloneTemplate(Basket.template));
+		super(cloneTemplate(Basket.template), events);
 
 		this.listElement = ensureElement<HTMLElement>(
 			'.basket__list',

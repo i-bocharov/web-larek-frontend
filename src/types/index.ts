@@ -64,3 +64,8 @@ export interface IBasketView {
 	total: number; // Общая стоимость всех продуктов в корзине
 	selected: string[]; // Массив ID выбранных продуктов (например, для удаления)
 }
+
+export interface IPage {
+	counter: number;
+	catalog: HTMLElement[];
+}
