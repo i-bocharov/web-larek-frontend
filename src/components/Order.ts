@@ -7,6 +7,7 @@ export class Order extends Form<IOrder> {
 	protected paymentButtonsElement: { [key: string]: HTMLButtonElement } = {};
 	private payment: string = '';
 	private address: string = '';
+	private addressInput: HTMLInputElement | null;
 
 	constructor(container: HTMLFormElement, protected events: EventEmitter) {
 		super(container, events);
@@ -31,12 +32,13 @@ export class Order extends Form<IOrder> {
 			}
 		});
 
-		const addressInput = this.container.querySelector(
+		this.addressInput = this.container.querySelector(
 			'input[name="address"]'
-		) as HTMLInputElement;
-		if (addressInput) {
-			addressInput.addEventListener('input', () => {
-				this.address = addressInput.value.trim();
+		) as HTMLInputElement | null;
+
+		if (this.addressInput) {
+			this.addressInput.addEventListener('input', () => {
+				this.address = this.addressInput.value.trim();
 				this.validateForm();
 			});
 		}
@@ -91,11 +93,8 @@ export class Order extends Form<IOrder> {
 
 		if (address) {
 			this.address = address;
-			const addressInput = this.container.querySelector(
-				'input[name="address"]'
-			) as HTMLInputElement;
-			if (addressInput) {
-				addressInput.value = address;
+			if (this.addressInput) {
+				this.addressInput.value = address;
 			}
 		}
 
