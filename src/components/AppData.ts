@@ -100,6 +100,63 @@ export class OrderModel extends Model<IOrder> {
 
 		return Object.keys(errors).length === 0;
 	}
+
+	protected validateForm(): boolean {
+		const email = this.getEmail();
+		const phone = this.getPhone();
+
+		this.errors = [];
+
+		if (!email) {
+			this.errors.push('Email обязателен');
+		} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			this.errors.push('Некорректный формат email');
+		}
+
+		if (!phone) {
+			this.errors.push('Телефон обязателен');
+		} else if (
+			!/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
+				phone
+			)
+		) {
+			this.errors.push('Некорректный формат телефона');
+		}
+
+		this.valid = this.errors.length === 0;
+		this.render({ errors: this.errors, valid: this.valid });
+		return this.valid;
+	}
+
+	if (emailInput && phoneInput) {
+		const validateForm = () => {
+			this.errors = [];
+			const email = this.getEmail();
+			const phone = this.getPhone();
+
+			if (!email) {
+				this.errors.push('Email обязателен');
+			} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+				this.errors.push('Некорректный формат email');
+			}
+
+			if (!phone) {
+				this.errors.push('Телефон обязателен');
+			} else if (
+				!/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
+					phone
+				)
+			) {
+				this.errors.push('Некорректный формат телефона');
+			}
+
+			this.valid = this.errors.length === 0;
+			this.render({ errors: this.errors, valid: this.valid });
+		};
+
+		emailInput.addEventListener('input', validateForm);
+		phoneInput.addEventListener('input', validateForm);
+	}
 }
 
 /**

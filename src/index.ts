@@ -1,3 +1,9 @@
+// ToDo
+// AppData
+// CardList
+// Contacts
+// index
+
 import './scss/styles.scss';
 
 import { EventEmitter } from './components/base/Events';
