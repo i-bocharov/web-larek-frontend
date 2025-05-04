@@ -126,8 +126,13 @@ events.on<{ count: number }>('basket:counter', ({ count }) => {
 // Открытие и обработка формы заказа
 events.on('order:open', () => {
 	const orderForm = new Order(cloneTemplate(orderTemplate), events);
+	const { valid, errors } = orderModel.validate({
+		payment: appState.getPaymentMethod(),
+		address: '',
+	});
+
 	modal.render({
-		content: orderForm.render({ valid: true, errors: [] }),
+		content: orderForm.render({ valid, errors }),
 	});
 
 	const handlers = {
@@ -143,8 +148,14 @@ events.on('order:open', () => {
 			orderForm.render({ ...data, valid, errors });
 		},
 		addressChange: (data: { payment: string; address: string }) => {
-			const { valid, errors } = orderModel.validate(data);
-			orderForm.render({ ...data, valid, errors });
+			// Сохраняем текущий метод оплаты из appState
+			const currentPayment = appState.getPaymentMethod();
+			const { valid, errors } = orderModel.validate({
+				...data,
+				payment: currentPayment, // Добавляем текущий метод оплаты в валидацию
+			});
+			// Передаем в рендер текущий метод оплаты
+			orderForm.render({ ...data, payment: currentPayment, valid, errors });
 		},
 	};
 

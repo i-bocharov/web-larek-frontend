@@ -22,9 +22,15 @@ export class Order extends Form<IOrder> {
 			container
 		);
 
+		this.init();
+
 		this._buttons.forEach((button) => {
 			button.addEventListener('click', () => {
 				this.updateButtons(button.name);
+				// Добавляем эмит события изменения способа оплаты
+				events.emit('payment:method:changed', {
+					method: button.name === 'card' ? 'online' : 'cash',
+				});
 				events.emit('order:payment:change', {
 					payment: this._payment,
 					address: this.address,
@@ -48,11 +54,31 @@ export class Order extends Form<IOrder> {
 		});
 	}
 
+	protected init() {
+		// Установка начального состояния
+		this.valid = false;
+		this.errors = [];
+	}
+
 	protected updateButtons(name: string) {
+		// Проверяем соответствие payment и button.name
+		const expectedButtonName = this._payment === 'online' ? 'card' : 'cash';
+
 		this._buttons.forEach((button) => {
-			this.toggleClass(button, 'button_alt-active', button.name === name);
+			// Устанавливаем класс active для кнопки, соответствующей текущему способу оплаты
+			this.toggleClass(
+				button,
+				'button_alt-active',
+				button.name === expectedButtonName
+			);
 		});
-		this._payment = name;
+
+		// Обновляем значение payment в зависимости от нажатой кнопки
+		if (name === 'card') {
+			this._payment = 'online';
+		} else if (name === 'cash') {
+			this._payment = 'cash';
+		}
 	}
 
 	set address(value: string) {
@@ -71,8 +97,10 @@ export class Order extends Form<IOrder> {
 		if (valid !== undefined) {
 			this.valid = valid;
 		}
-		if (errors) {
-			this.errors = errors;
+		if (errors && Array.isArray(errors)) {
+			this.setErrors(errors);
+		} else {
+			this.setErrors([]);
 		}
 		return this.container;
 	}

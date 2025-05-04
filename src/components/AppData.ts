@@ -46,32 +46,20 @@ export class OrderModel extends Model<IOrder> {
 			return { valid: false, errors };
 		}
 
-		if ('email' in data) {
-			const email = data.email || '';
-			if (!email) {
-				errors.push('Необходимо указать email');
-			}
+		if (!data.payment) {
+			errors.push('Необходимо выбрать способ оплаты');
 		}
 
-		if ('phone' in data) {
-			const phone = data.phone || '';
-			if (!phone) {
-				errors.push('Необходимо указать телефон');
-			}
+		if (!data.address) {
+			errors.push('Необходимо указать адрес');
 		}
 
-		if ('payment' in data) {
-			const payment = data.payment || '';
-			if (!payment) {
-				errors.push('Необходимо выбрать способ оплаты');
-			}
+		if (data.email !== undefined && !data.email) {
+			errors.push('Необходимо указать email');
 		}
 
-		if ('address' in data) {
-			const address = data.address || '';
-			if (!address) {
-				errors.push('Необходимо указать адрес');
-			}
+		if (data.phone !== undefined && !data.phone) {
+			errors.push('Необходимо указать телефон');
 		}
 
 		// Проверка корзины только при полной валидации заказа
