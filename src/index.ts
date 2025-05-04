@@ -142,6 +142,8 @@ events.on('order:open', () => {
 			const { valid, errors } = orderModel.validate(data);
 			orderForm.render({ ...data, valid, errors });
 			if (valid) {
+				// Сохраняем адрес перед переходом к следующей форме
+				appState.setAddress(data.address);
 				events.emit('order:next');
 			}
 		},
@@ -175,8 +177,9 @@ events.on('order:open', () => {
 
 	subscribe();
 	events.on('modal:close', () => {
-		// Сбрасываем способ оплаты при закрытии модального окна
+		// Сбрасываем способ оплаты и адрес при закрытии модального окна
 		appState.setPaymentMethod(null);
+		appState.setAddress('');
 		unsubscribe();
 		events.off('modal:close', unsubscribe);
 	});
@@ -206,7 +209,7 @@ events.on('order:next', () => {
 					email: data.email,
 					phone: data.phone,
 					payment: appState.getPaymentMethod() || 'online',
-					address: '', // будет заполнено из предыдущей формы
+					address: appState.getAddress(), // Используем сохраненный адрес
 					total: appState.calculateBasketTotal(),
 					items: basketItems.map((item) => item.id),
 				};

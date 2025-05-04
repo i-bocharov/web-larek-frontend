@@ -96,6 +96,7 @@ export class AppState extends Model<IAppState> {
 	private state: IAppState;
 	private productModel: ProductModel;
 	private orderModel: OrderModel;
+	private _address: string = '';
 
 	constructor(
 		events: IEvents,
@@ -235,5 +236,13 @@ export class AppState extends Model<IAppState> {
 
 	isInBasket(productId: string): boolean {
 		return this.state.basket.includes(productId);
+	}
+
+	getAddress(): string {
+		return this._address;
+	}
+
+	setAddress(address: string): void {
+		this._address = address;
 	}
 }
