@@ -50,7 +50,7 @@ export class Order extends Form<IOrder> {
 
 	protected updateButtons(name: string) {
 		this._buttons.forEach((button) => {
-			button.classList.toggle('button_alt-active', button.name === name);
+			this.toggleClass(button, 'button_alt-active', button.name === name);
 		});
 		this._payment = name;
 	}

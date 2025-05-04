@@ -36,13 +36,12 @@ export class Basket extends View<IBasketView> {
 	render(data: IBasketView): HTMLElement {
 		const items = data.items.map((item, index) => {
 			const element = cloneTemplate<HTMLElement>('#card-basket');
-			element.querySelector('.basket__item-index').textContent = (
-				index + 1
-			).toString();
-			element.querySelector('.card__title').textContent = item.title;
-			element.querySelector('.card__price').textContent = item.price
-				? `${item.price} синапсов`
-				: 'Бесплатно';
+			this.setText(element.querySelector('.basket__item-index'), index + 1);
+			this.setText(element.querySelector('.card__title'), item.title);
+			this.setText(
+				element.querySelector('.card__price'),
+				item.price ? `${item.price} синапсов` : 'Бесплатно'
+			);
 
 			const deleteButton = element.querySelector('.basket__item-delete');
 			deleteButton.addEventListener('click', () => {
@@ -62,13 +61,9 @@ export class Basket extends View<IBasketView> {
 				  ])
 		);
 
-		if (items.length === 0) {
-			this.buttonElement.setAttribute('disabled', 'disabled');
-		} else {
-			this.buttonElement.removeAttribute('disabled');
-		}
+		this.setDisabled(this.buttonElement, items.length === 0);
 
-		this.totalElement.textContent = `${data.total} синапсов`;
+		this.setText(this.totalElement, `${data.total} синапсов`);
 
 		return this.container;
 	}

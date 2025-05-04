@@ -9,13 +9,22 @@ import { IEvents } from './base/Events';
 export class ProductModel extends Model<IProduct> {
 	constructor(data: Partial<IProduct>, events: IEvents) {
 		super(data, events);
+		console.log('ProductModel initialized');
 	}
 
 	setProducts(products: IProduct[]): void {
+		console.log(
+			'ProductModel: Emitting products:loaded event with products:',
+			products.length
+		);
 		this.emitChanges('products:loaded', { products });
 	}
 
 	setProduct(product: IProduct): void {
+		console.log(
+			'ProductModel: Emitting product:loaded event with product:',
+			product.id
+		);
 		this.emitChanges('product:loaded', { product });
 	}
 }
@@ -141,7 +150,6 @@ export class AppState extends Model<IAppState> {
 			},
 			events
 		);
-
 		this.productModel = productModel;
 		this.orderModel = orderModel;
 		this.state = {
@@ -157,11 +165,12 @@ export class AppState extends Model<IAppState> {
 
 	private set(nextState: Partial<IAppState>): void {
 		this.state = { ...this.state, ...nextState };
+		console.log('AppState: State updated:', this.state);
 		this.emitChanges('state:updated', this.state);
 	}
 
 	setProducts(products: IProduct[]): void {
-		console.log('Setting products in catalog:', products.length);
+		console.log('AppState: Setting products in catalog:', products.length);
 		this.set({ catalog: products });
 		this.productModel.setProducts(products);
 	}

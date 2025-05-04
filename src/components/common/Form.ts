@@ -89,7 +89,7 @@ export class Form<T> extends Component<IFormState> {
 			`[name="${String(field)}"]`
 		) as HTMLInputElement;
 		if (input) {
-			input.classList.add('input_error');
+			this.toggleClass(input, 'input_error');
 			this.errors = [...this.errors, error];
 		}
 	}
@@ -99,7 +99,7 @@ export class Form<T> extends Component<IFormState> {
 			`[name="${String(field)}"]`
 		) as HTMLInputElement;
 		if (input) {
-			input.classList.remove('input_error');
+			this.toggleClass(input, 'input_error', false);
 			this.errors = this.errors.filter(
 				(error) => !error.includes(String(field))
 			);

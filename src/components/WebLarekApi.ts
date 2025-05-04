@@ -20,22 +20,28 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 	constructor(cdn: string, baseUrl: string, options?: RequestInit) {
 		super(baseUrl, options);
 		this.cdn = cdn;
-		console.log('WebLarekApi initialized with CDN:', cdn);
+		console.log('WebLarekApi initialized with:', { cdn, baseUrl });
 	}
 
 	getProducts(): Promise<IProductList> {
-		console.log('Fetching products list');
-		return this.get('/product').then((data: IProductList) => {
-			const products = {
-				...data,
-				items: data.items.map((item) => ({
-					...item,
-					image: this.cdn + item.image.replace('.svg', '.png'),
-				})),
-			};
-			console.log('Products fetched successfully:', products.items.length);
-			return products;
-		});
+		console.log('Fetching products from API...');
+		return this.get('/product')
+			.then((data: IProductList) => {
+				console.log('Raw API response:', data);
+				const products = {
+					...data,
+					items: data.items.map((item) => ({
+						...item,
+						image: this.cdn + item.image.replace('.svg', '.png'),
+					})),
+				};
+				console.log('Processed products:', products);
+				return products;
+			})
+			.catch((error) => {
+				console.error('Failed to fetch products:', error);
+				throw error;
+			});
 	}
 
 	getProductById(id: string): Promise<IProduct | IProductNotFound> {
