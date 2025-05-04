@@ -1,5 +1,5 @@
 import { Component } from '../base/Component';
-import { ensureElement, formatNumber } from '../../utils/utils';
+import { ensureElement } from '../../utils/utils';
 
 interface ISuccess {
 	total: number;
@@ -10,31 +10,27 @@ interface ISuccessActions {
 }
 
 export class Success extends Component<ISuccess> {
-	protected closeElement: HTMLElement;
-	protected descriptionElement: HTMLElement;
+	protected _close: HTMLElement;
+	protected _total: HTMLElement;
 
 	constructor(container: HTMLElement, actions: ISuccessActions) {
 		super(container);
 
-		this.closeElement = ensureElement<HTMLElement>(
+		this._close = ensureElement<HTMLElement>(
 			'.order-success__close',
-			container
+			this.container
 		);
-		this.descriptionElement = ensureElement<HTMLElement>(
+		this._total = ensureElement<HTMLElement>(
 			'.order-success__description',
-			container
+			this.container
 		);
 
 		if (actions?.onClick) {
-			this.closeElement.addEventListener('click', actions.onClick);
+			this._close.addEventListener('click', actions.onClick);
 		}
 	}
 
-	render(data: ISuccess): HTMLElement {
-		this.setText(
-			this.descriptionElement,
-			`Списано ${formatNumber(data.total)} синапсов`
-		);
-		return this.container;
+	set total(total: number) {
+		this.setText(this._total, `Списано ${total} синапсов`);
 	}
 }

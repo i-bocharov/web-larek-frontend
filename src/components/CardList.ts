@@ -1,13 +1,19 @@
 import { Component } from './base/Component';
+import { IEvents } from './base/Events';
 
-export class CardList extends Component<{ items: HTMLElement[] }> {
-	constructor(container: HTMLElement) {
+interface ICardList {
+	items: HTMLElement[];
+}
+
+export class CardList extends Component<ICardList> {
+	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
+		console.log('CardList initialized');
 	}
 
-	render(data?: { items: HTMLElement[] }): HTMLElement {
-		const items = data?.items || [];
-		this.container.replaceChildren(...items);
+	render(data: ICardList): HTMLElement {
+		console.log('Rendering CardList with items:', data.items.length);
+		this.container.replaceChildren(...data.items);
 		return this.container;
 	}
 }

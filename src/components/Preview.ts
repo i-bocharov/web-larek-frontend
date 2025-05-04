@@ -1,50 +1,72 @@
 import { Component } from './base/Component';
+import { ensureElement } from '../utils/utils';
 import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
 export class Preview extends Component<IProduct> {
-	private events: IEvents;
+	protected _title: HTMLElement;
+	protected _image: HTMLImageElement;
+	protected _description: HTMLElement;
+	protected _category: HTMLElement;
+	protected _price: HTMLElement;
+	protected _button: HTMLButtonElement;
 
-	constructor(container: HTMLElement, events: IEvents) {
+	constructor(container: HTMLElement, private events: IEvents) {
 		super(container);
-		this.events = events; // Сохраняем events локально
+
+		this._title = ensureElement<HTMLElement>('.card__title', container);
+		this._image = ensureElement<HTMLImageElement>('.card__image', container);
+		this._description = ensureElement<HTMLElement>('.card__text', container);
+		this._category = ensureElement<HTMLElement>('.card__category', container);
+		this._price = ensureElement<HTMLElement>('.card__price', container);
+		this._button = ensureElement<HTMLButtonElement>('.card__button', container);
+
+		this._button.addEventListener('click', () => {
+			const isInBasket = this._button.textContent === 'Убрать из корзины';
+			events.emit(isInBasket ? 'basket:item-removed' : 'basket:item-added', {
+				productId: this.container.dataset.id,
+			});
+		});
 	}
 
-	render(data?: Partial<IProduct>): HTMLElement {
-		const product = data as IProduct;
+	set id(value: string) {
+		this.container.dataset.id = value;
+	}
 
-		if (!product) {
-			throw new Error('Для рендеринга требуются данные о продукте');
-		}
+	get id(): string {
+		return this.container.dataset.id || '';
+	}
 
-		const template = document.getElementById(
-			'card-preview'
-		) as HTMLTemplateElement;
-		const preview = template.content.cloneNode(true) as HTMLElement;
+	set title(value: string) {
+		this.setText(this._title, value);
+	}
 
-		this.setText(preview.querySelector('.card__category'), product.category);
-		this.setText(preview.querySelector('.card__title'), product.title);
-		this.setText(preview.querySelector('.card__text'), product.description);
-		this.setText(
-			preview.querySelector('.card__price'),
-			`${product.price ?? 'Бесплатно'} синапсов`
-		);
-		preview.querySelector('.card__image')!.setAttribute('src', product.image);
+	set price(value: number | null) {
+		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
+	}
 
-		const addToBasketButton = preview.querySelector(
-			'.card__button'
-		) as HTMLButtonElement;
+	set category(value: string) {
+		this.setText(this._category, value);
+		const categoryClass =
+			'card__category_' + value.toLowerCase().replace(/\s+/g, '-');
+		this._category.className = `card__category ${categoryClass}`;
+	}
 
-		addToBasketButton.addEventListener('click', () => {
-			if (addToBasketButton.textContent === 'В корзину') {
-				this.events.emit('basket:item-added', { productId: product.id });
-			} else {
-				this.events.emit('basket:item-removed', { productId: product.id });
-			}
-		});
+	set image(value: string) {
+		this.setImage(this._image, value, this._title.textContent || '');
+	}
 
-		this.container.replaceChildren(preview);
+	set description(value: string) {
+		this.setText(this._description, value);
+	}
 
-		return this.container; // Возвращаем контейнер для совместимости с базовым классом
+	render(data: IProduct): HTMLElement {
+		this.id = data.id;
+		this.title = data.title;
+		this.price = data.price;
+		this.category = data.category;
+		this.image = data.image;
+		this.description = data.description;
+		return this.container;
 	}
 }

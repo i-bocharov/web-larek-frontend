@@ -29,52 +29,90 @@ export class OrderModel extends Model<IOrder> {
 		super(data, events);
 	}
 
-	/**
-	 * Валидация данных заказа.
-	 * Возвращает true, если ошибок нет, иначе false и эмитит событие с ошибками.
-	 */
+	private validateEmail(email: string): boolean {
+		return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email);
+	}
+
+	private validatePhone(phone: string): boolean {
+		return /^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
+			phone
+		);
+	}
+
+	private validatePayment(payment: string): boolean {
+		return payment === 'card' || payment === 'cash';
+	}
+
+	private validateAddress(address: string): boolean {
+		return address.length > 0;
+	}
+
+	validate(data: Partial<IOrder>): { valid: boolean; errors: string[] } {
+		const errors: string[] = [];
+
+		if (!data) {
+			errors.push('Отсутствуют данные для валидации');
+			return { valid: false, errors };
+		}
+
+		if ('email' in data) {
+			const email = data.email || '';
+			if (!email) {
+				errors.push('Необходимо указать email');
+			} else if (!this.validateEmail(email)) {
+				errors.push('Некорректный формат email');
+			}
+		}
+
+		if ('phone' in data) {
+			const phone = data.phone || '';
+			if (!phone) {
+				errors.push('Необходимо указать телефон');
+			} else if (!this.validatePhone(phone)) {
+				errors.push('Некорректный формат телефона');
+			}
+		}
+
+		if ('payment' in data) {
+			const payment = data.payment || '';
+			if (!payment) {
+				errors.push('Необходимо выбрать способ оплаты');
+			} else if (!this.validatePayment(payment)) {
+				errors.push('Выберите способ оплаты');
+			}
+		}
+
+		if ('address' in data) {
+			const address = data.address || '';
+			if (!address) {
+				errors.push('Необходимо указать адрес');
+			} else if (!this.validateAddress(address)) {
+				errors.push('Укажите адрес');
+			}
+		}
+
+		// Проверка корзины только при полной валидации заказа
+		if ('items' in data && (!data.items || data.items.length === 0)) {
+			errors.push('Корзина пуста');
+		}
+
+		return {
+			valid: errors.length === 0,
+			errors,
+		};
+	}
+
 	validateOrder(orderData: IOrder): boolean {
-		const errors: Partial<Record<keyof IOrder, string>> = {};
-
-		// Проверка способа оплаты
-		if (
-			!orderData.payment ||
-			(orderData.payment !== 'online' && orderData.payment !== 'cash')
-		) {
-			errors.payment = 'Выберите способ оплаты';
+		const { valid, errors } = this.validate(orderData);
+		if (!valid) {
+			this.emitChanges('order:validate', {
+				errors: errors.reduce((acc: Record<string, string>, error, index) => {
+					acc[`error${index}`] = error;
+					return acc;
+				}, {}),
+			});
 		}
-
-		// Email
-		if (!orderData.email) {
-			errors.email = 'Необходимо указать email';
-		} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderData.email)) {
-			errors.email = 'Некорректный формат email';
-		}
-
-		// Телефон
-		if (!orderData.phone) {
-			errors.phone = 'Необходимо указать телефон';
-		} else if (
-			!/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
-				orderData.phone
-			)
-		) {
-			errors.phone = 'Некорректный формат телефона';
-		}
-
-		// Адрес
-		if (!orderData.address) {
-			errors.address = 'Необходимо указать адрес';
-		}
-
-		// Корзина
-		if (!orderData.items || orderData.items.length === 0) {
-			errors.items = 'Корзина пуста';
-		}
-
-		this.emitChanges('formErrors:change', errors);
-
-		return Object.keys(errors).length === 0;
+		return valid;
 	}
 }
 
@@ -103,6 +141,7 @@ export class AppState extends Model<IAppState> {
 			},
 			events
 		);
+
 		this.productModel = productModel;
 		this.orderModel = orderModel;
 		this.state = {
@@ -113,6 +152,7 @@ export class AppState extends Model<IAppState> {
 			loading: false,
 			paymentMethod: null,
 		};
+		console.log('AppState initialized');
 	}
 
 	private set(nextState: Partial<IAppState>): void {
@@ -121,6 +161,7 @@ export class AppState extends Model<IAppState> {
 	}
 
 	setProducts(products: IProduct[]): void {
+		console.log('Setting products in catalog:', products.length);
 		this.set({ catalog: products });
 		this.productModel.setProducts(products);
 	}
@@ -131,12 +172,14 @@ export class AppState extends Model<IAppState> {
 
 	addToBasket(productId: string): void {
 		if (!this.state.basket.includes(productId)) {
+			console.log('Adding product to basket:', productId);
 			this.set({ basket: [...this.state.basket, productId] });
 			this.emitChanges('basket:updated', { basket: this.state.basket });
 		}
 	}
 
 	removeFromBasket(productId: string): void {
+		console.log('Removing product from basket:', productId);
 		this.set({
 			basket: this.state.basket.filter((id) => id !== productId),
 		});
@@ -155,10 +198,7 @@ export class AppState extends Model<IAppState> {
 	}
 
 	getBasketItems(): IBasketItem[] {
-		if (!this.state.catalog.length) {
-			return [];
-		}
-
+		console.log('Getting basket items, current basket:', this.state.basket);
 		return this.state.basket
 			.map((productId) => {
 				const product = this.state.catalog.find(
@@ -166,6 +206,7 @@ export class AppState extends Model<IAppState> {
 				);
 
 				if (!product) {
+					console.warn('Product not found in catalog:', productId);
 					return null;
 				}
 
@@ -180,29 +221,22 @@ export class AppState extends Model<IAppState> {
 	}
 
 	calculateBasketTotal(): number {
-		if (!this.state.catalog.length) {
-			return 0;
-		}
-
-		return this.state.basket.reduce((total, productId) => {
-			const product = this.state.catalog.find((item) => item.id === productId);
-
-			return total + (product?.price || 0);
+		return this.getBasketItems().reduce((total, item) => {
+			return total + (item.price || 0);
 		}, 0);
 	}
 
 	placeOrder(orderData: IOrder): void {
 		if (!this.orderModel.validateOrder(orderData)) {
-			return; // Валидация не пройдена
+			return;
 		}
-		this.set({ order: orderData }); // Обновляем состояние заказа
-		this.clearBasket(); // Очищаем корзину после успешного заказа
+		this.set({ order: orderData });
+		this.clearBasket();
 		this.emitChanges('order:placed', { order: orderData });
 	}
 
 	updateBasketCounter(): void {
 		const count = this.state.basket.length;
-
 		this.emitChanges('basket:counter', { count });
 	}
 
@@ -213,5 +247,13 @@ export class AppState extends Model<IAppState> {
 
 	getPaymentMethod(): 'online' | 'cash' | null {
 		return this.state.paymentMethod;
+	}
+
+	getCatalog(): IProduct[] {
+		return this.state.catalog;
+	}
+
+	getBasket(): string[] {
+		return this.state.basket;
 	}
 }

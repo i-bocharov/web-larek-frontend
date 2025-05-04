@@ -1,42 +1,54 @@
 import { Form } from './common/Form';
+import { IEvents } from './base/Events';
+import { ensureElement } from '../utils/utils';
 import { IOrder } from '../types';
-import { EventEmitter } from './base/Events';
-import { IFormState } from '../types';
 
 export class Contacts extends Form<IOrder> {
-	constructor(container: HTMLFormElement, events: EventEmitter) {
+	private _phone: HTMLInputElement;
+	private _email: HTMLInputElement;
+
+	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
 
-		const submitEventName = `${this.container.name}:submit`;
+		this._phone = ensureElement<HTMLInputElement>(
+			'input[name="phone"]',
+			container
+		);
+		this._email = ensureElement<HTMLInputElement>(
+			'input[name="email"]',
+			container
+		);
 
-		this.events.on(submitEventName, () => {
-			const emailInput = this.getEmail();
-			const phoneInput = this.getPhone();
+		this.container.addEventListener('submit', (e: Event) => {
+			e.preventDefault();
+			const formData = {
+				email: this._email.value,
+				phone: this._phone.value,
+			};
+			events.emit('contacts:submit', formData);
+		});
 
-			this.events.emit('contacts:validate', { emailInput, phoneInput });
+		this._email.addEventListener('input', () => {
+			events.emit('contacts:change', this.values);
+		});
+
+		this._phone.addEventListener('input', () => {
+			events.emit('contacts:change', this.values);
 		});
 	}
 
-	render(state: Partial<IOrder> & IFormState): HTMLFormElement {
-		const result = super.render({
-			...state,
-			errors: this.errors,
-			valid: this.valid,
-		});
-		return result;
+	protected get values() {
+		return {
+			email: this._email.value,
+			phone: this._phone.value,
+		};
 	}
 
-	getEmail(): string {
-		return (
-			(this.container.querySelector('input[name="email"]') as HTMLInputElement)
-				?.value || ''
-		);
+	set phone(value: string) {
+		this._phone.value = value;
 	}
 
-	getPhone(): string {
-		return (
-			(this.container.querySelector('input[name="phone"]') as HTMLInputElement)
-				?.value || ''
-		);
+	set email(value: string) {
+		this._email.value = value;
 	}
 }

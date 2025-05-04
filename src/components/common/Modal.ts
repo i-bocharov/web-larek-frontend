@@ -7,79 +7,45 @@ interface IModalData {
 }
 
 export class Modal extends Component<IModalData> {
-	protected closeButtonElement: HTMLButtonElement;
-	protected contentElement: HTMLElement;
+	private _closeButton: HTMLButtonElement;
+	private _content: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 
-		this.closeButtonElement = ensureElement<HTMLButtonElement>(
+		this._closeButton = ensureElement<HTMLButtonElement>(
 			'.modal__close',
 			container
 		);
-		this.contentElement = ensureElement<HTMLElement>(
-			'.modal__content',
-			container
-		);
+		this._content = ensureElement<HTMLElement>('.modal__content', container);
 
-		this.closeButtonElement.addEventListener('click', () => this.close());
-		this.container.addEventListener('click', (event) => {
-			if (event.target === this.container) {
-				this.close();
-			}
-		});
+		this._closeButton.addEventListener('click', this.close.bind(this));
+		this.container.addEventListener('click', this.close.bind(this));
+		this._content.addEventListener('click', (event) => event.stopPropagation());
 	}
 
-	set content(value: HTMLElement | DocumentFragment) {
-		// Очищаем текущее содержимое
-		this.contentElement.replaceChildren();
-
-		if (value instanceof DocumentFragment) {
-			if (value.firstElementChild) {
-				this.contentElement.appendChild(value.firstElementChild);
-			}
-		} else if (value) {
-			this.contentElement.appendChild(value);
-		}
+	set content(value: HTMLElement) {
+		this._content.replaceChildren(value);
 	}
 
-	toggleModal(state: boolean = true) {
-		this.toggleClass(this.container, 'modal_active', state);
+	getContent(): HTMLElement {
+		return this._content;
 	}
-
-	// Обработчик в виде стрелочного метода, чтобы не терять контекст `this`
-	handleEscape = (evt: KeyboardEvent) => {
-		if (evt.key === 'Escape') {
-			this.close();
-		}
-	};
 
 	open() {
-		this.toggleModal();
-		document.addEventListener('keydown', this.handleEscape);
+		this.container.classList.add('modal_active');
 		this.events.emit('modal:open');
 	}
 
 	close() {
-		this.toggleModal(false);
-		document.removeEventListener('keydown', this.handleEscape);
-		this.contentElement.replaceChildren();
+		this.container.classList.remove('modal_active');
+		this.content = null;
 		this.events.emit('modal:close');
 	}
 
 	render(data: IModalData): HTMLElement {
-		if (data.content) {
-			this.content = data.content;
-			this.open();
-		}
+		this.content = data.content;
+		this.open();
 		return this.container;
-	}
-
-	isActive(): boolean {
-		return this.container.classList.contains('modal_active');
-	}
-
-	getContent(): HTMLElement {
-		return this.contentElement;
 	}
 }

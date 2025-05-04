@@ -1,25 +1,24 @@
 import { Component } from './base/Component';
 import { IEvents } from './base/Events';
+import { ensureElement } from '../utils/utils';
 
 export class Header extends Component<{}> {
-	private basketCounter: HTMLElement;
-	private events: IEvents;
+	protected basketCounter: HTMLElement;
+	protected basketButton: HTMLElement;
 
-	constructor(container: HTMLElement, events: IEvents) {
+	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
-		this.events = events; // Сохраняем events локально
-		this.basketCounter = this.container.querySelector(
-			'.header__basket-counter'
-		)!;
-		this.initBasketButton();
-	}
 
-	private initBasketButton(): void {
-		const basketButton = this.container.querySelector(
-			'.header__basket'
-		) as HTMLButtonElement;
+		this.basketCounter = ensureElement<HTMLElement>(
+			'.header__basket-counter',
+			container
+		);
+		this.basketButton = ensureElement<HTMLElement>(
+			'.header__basket',
+			container
+		);
 
-		basketButton.addEventListener('click', () => {
+		this.basketButton.addEventListener('click', () => {
 			this.events.emit('basket:open');
 		});
 	}

@@ -4,14 +4,12 @@ import { EventEmitter } from '../base/Events';
 import { IBasketView } from '../../types';
 
 export class Basket extends View<IBasketView> {
-	static template = ensureElement<HTMLTemplateElement>('#basket');
-
 	protected listElement: HTMLElement;
 	protected totalElement: HTMLElement;
 	protected buttonElement: HTMLElement;
 
-	constructor(events: EventEmitter) {
-		super(cloneTemplate(Basket.template), events);
+	constructor(container: HTMLElement, events: EventEmitter) {
+		super(container, events);
 
 		this.listElement = ensureElement<HTMLElement>(
 			'.basket__list',
@@ -29,25 +27,49 @@ export class Basket extends View<IBasketView> {
 		this.buttonElement.addEventListener('click', () => {
 			events.emit('order:open');
 		});
-
-		this.items = [];
 	}
 
-	set items(items: HTMLElement[]) {
-		if (items.length) {
-			this.listElement.replaceChildren(...items);
-			this.buttonElement.removeAttribute('disabled');
-		} else {
-			this.listElement.replaceChildren(
-				createElement<HTMLParagraphElement>('p', {
-					textContent: 'Корзина пуста',
-				})
-			);
+	getContainer(): HTMLElement {
+		return this.container;
+	}
+
+	render(data: IBasketView): HTMLElement {
+		const items = data.items.map((item, index) => {
+			const element = cloneTemplate<HTMLElement>('#card-basket');
+			element.querySelector('.basket__item-index').textContent = (
+				index + 1
+			).toString();
+			element.querySelector('.card__title').textContent = item.title;
+			element.querySelector('.card__price').textContent = item.price
+				? `${item.price} синапсов`
+				: 'Бесплатно';
+
+			const deleteButton = element.querySelector('.basket__item-delete');
+			deleteButton.addEventListener('click', () => {
+				this.events.emit('basket:item-removed', { productId: item.id });
+			});
+
+			return element;
+		});
+
+		this.listElement.replaceChildren(
+			...(items.length
+				? items
+				: [
+						createElement<HTMLParagraphElement>('p', {
+							textContent: 'Корзина пуста',
+						}),
+				  ])
+		);
+
+		if (items.length === 0) {
 			this.buttonElement.setAttribute('disabled', 'disabled');
+		} else {
+			this.buttonElement.removeAttribute('disabled');
 		}
-	}
 
-	set total(total: number) {
-		this.setText(this.totalElement, `${total} синапсов`);
+		this.totalElement.textContent = `${data.total} синапсов`;
+
+		return this.container;
 	}
 }

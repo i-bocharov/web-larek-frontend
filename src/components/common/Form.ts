@@ -10,7 +10,7 @@ interface IFormState {
 export class Form<T> extends Component<IFormState> {
 	protected submitButtonElement: HTMLButtonElement;
 	protected errorsElement: HTMLElement;
-	protected errors: string[] = [];
+	protected _errors: string[] = [];
 	private _valid: boolean = false;
 
 	constructor(protected container: HTMLFormElement, protected events: IEvents) {
@@ -20,21 +20,32 @@ export class Form<T> extends Component<IFormState> {
 			'button[type=submit]',
 			this.container
 		);
-		this.errorsElement = ensureElement<HTMLElement>(
-			'.form__errors',
-			this.container
-		);
+
+		// Ищем элемент ошибок в modal__actions
+		this.errorsElement = this.container.querySelector(
+			'.modal__actions .form__errors'
+		) as HTMLElement;
+		if (!this.errorsElement) {
+			// Если не нашли в modal__actions, ищем в корне формы
+			this.errorsElement = ensureElement<HTMLElement>(
+				'.form__errors',
+				this.container
+			);
+		}
 
 		this.container.addEventListener('input', (e: Event) => {
 			const target = e.target as HTMLInputElement;
 			const field = target.name as keyof T;
 			const value = target.value;
 			this.onInputChange(field, value);
+			this.validateForm();
 		});
 
 		this.container.addEventListener('submit', (e: Event) => {
 			e.preventDefault();
-			this.events.emit(`${this.container.name}:submit`);
+			if (this.valid) {
+				this.events.emit(`${this.container.name}:submit`);
+			}
 		});
 	}
 
@@ -47,24 +58,60 @@ export class Form<T> extends Component<IFormState> {
 
 	set valid(value: boolean) {
 		this._valid = value;
-		this.setDisabled(this.submitButtonElement, !value);
+		if (this.submitButtonElement) {
+			this.setDisabled(this.submitButtonElement, !value);
+		}
 	}
 
 	get valid(): boolean {
 		return this._valid;
 	}
 
+	set errors(value: string[]) {
+		this._errors = value;
+		this.setErrors(value);
+	}
+
+	get errors(): string[] {
+		return this._errors;
+	}
+
 	protected setErrors(errors: string[]) {
-		this.errors = errors;
 		this.setText(this.errorsElement, errors.join(', '));
 	}
 
-	render(state: Partial<T> & IFormState) {
+	protected validateForm(): boolean {
+		return true;
+	}
+
+	protected setFieldError(field: keyof T, error: string) {
+		const input = this.container.querySelector(
+			`[name="${String(field)}"]`
+		) as HTMLInputElement;
+		if (input) {
+			input.classList.add('input_error');
+			this.errors = [...this.errors, error];
+		}
+	}
+
+	protected clearFieldError(field: keyof T) {
+		const input = this.container.querySelector(
+			`[name="${String(field)}"]`
+		) as HTMLInputElement;
+		if (input) {
+			input.classList.remove('input_error');
+			this.errors = this.errors.filter(
+				(error) => !error.includes(String(field))
+			);
+		}
+	}
+
+	render(state: Partial<T> & IFormState): HTMLFormElement {
 		const { valid, errors = [], ...inputs } = state;
 		if (valid !== undefined) {
 			this.valid = valid;
 		}
-		this.setErrors(errors);
+		this.errors = errors;
 		Object.assign(this, inputs);
 		return this.container;
 	}

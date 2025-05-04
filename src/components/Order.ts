@@ -1,109 +1,79 @@
 import { Form } from './common/Form';
-import { IOrder } from '../types';
-import { EventEmitter } from './base/Events';
-import { IFormState } from '../types';
+import { IEvents } from './base/Events';
+import { ensureElement } from '../utils/utils';
+import { IOrder, IFormState } from '../types';
 
 export class Order extends Form<IOrder> {
-	protected paymentButtonsElement: { [key: string]: HTMLButtonElement } = {};
-	private payment: string = '';
-	private address: string = '';
-	private addressInput: HTMLInputElement | null;
+	protected _buttons: HTMLButtonElement[];
+	protected _buttonsContainer: HTMLElement;
+	protected _address: HTMLInputElement;
+	protected _payment: string = '';
 
-	constructor(container: HTMLFormElement, protected events: EventEmitter) {
+	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
 
-		this.paymentButtonsElement = {
-			card: container.querySelector('button[name="card"]') as HTMLButtonElement,
-			cash: container.querySelector('button[name="cash"]') as HTMLButtonElement,
-		};
+		this._buttons = Array.from(container.querySelectorAll('.button_alt'));
+		this._buttonsContainer = ensureElement<HTMLElement>(
+			'.order__buttons',
+			container
+		);
+		this._address = ensureElement<HTMLInputElement>(
+			'input[name="address"]',
+			container
+		);
 
-		Object.entries(this.paymentButtonsElement).forEach(([method, element]) => {
-			element.addEventListener('click', () => {
-				const methodName = method === 'card' ? 'online' : 'cash';
-				this.events.emit('payment:method:changed', { method: methodName });
-				this.validateForm();
+		this._buttons.forEach((button) => {
+			button.addEventListener('click', () => {
+				this.updateButtons(button.name);
+				events.emit('order:payment:change', {
+					payment: this._payment,
+					address: this.address,
+				});
 			});
 		});
 
-		const submitEventName = `${this.container.name}:submit`;
-		this.events.on(submitEventName, () => {
-			if (this.validateForm()) {
-				this.events.emit('order:form-open');
-			}
-		});
-
-		this.addressInput = this.container.querySelector(
-			'input[name="address"]'
-		) as HTMLInputElement | null;
-
-		if (this.addressInput) {
-			this.addressInput.addEventListener('input', () => {
-				this.address = this.addressInput.value.trim();
-				this.validateForm();
+		this._address.addEventListener('input', () => {
+			events.emit('order:address:change', {
+				payment: this._payment,
+				address: this.address,
 			});
-		}
-
-		this.payment = '';
-		this.address = '';
-		this.valid = false;
-		this.validateForm();
-	}
-
-	protected validatePayment(payment: string): boolean {
-		return payment === 'online' || payment === 'cash';
-	}
-
-	protected validateForm(): boolean {
-		this.errors = [];
-
-		if (!this.validatePayment(this.payment)) {
-			this.errors.push('Выберите способ оплаты');
-		}
-
-		if (!this.address.length) {
-			this.errors.push('Укажите адрес доставки');
-		}
-
-		this.valid = this.errors.length === 0;
-		this.render({ errors: this.errors, valid: this.valid });
-		return this.valid;
-	}
-
-	setPaymentMethod(method: string): void {
-		this.payment = method;
-		Object.values(this.paymentButtonsElement).forEach((button) => {
-			const isActive =
-				button.getAttribute('name') === (method === 'online' ? 'card' : 'cash');
-			this.toggleClass(button, 'button_alt-active', isActive);
 		});
-		this.validateForm();
+
+		this.container.addEventListener('submit', (e: Event) => {
+			e.preventDefault();
+			events.emit('order:submit', {
+				payment: this._payment,
+				address: this.address,
+			});
+		});
 	}
 
-	getAddress(): string {
-		return this.address;
+	protected updateButtons(name: string) {
+		this._buttons.forEach((button) => {
+			button.classList.toggle('button_alt-active', button.name === name);
+		});
+		this._payment = name;
+	}
+
+	set address(value: string) {
+		this._address.value = value;
+	}
+
+	get address(): string {
+		return this._address.value;
 	}
 
 	render(state: Partial<IOrder> & IFormState): HTMLFormElement {
-		const { address, payment, errors = this.errors } = state;
-
+		const { payment, valid, errors } = state;
 		if (payment) {
-			this.payment = payment;
-			this.setPaymentMethod(payment);
+			this.updateButtons(payment);
 		}
-
-		if (address) {
-			this.address = address;
-			if (this.addressInput) {
-				this.addressInput.value = address;
-			}
+		if (valid !== undefined) {
+			this.valid = valid;
 		}
-
-		const result = super.render({
-			...state,
-			errors,
-			valid: this.valid,
-		});
-
-		return result;
+		if (errors) {
+			this.errors = errors;
+		}
+		return this.container;
 	}
 }
