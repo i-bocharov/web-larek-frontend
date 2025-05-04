@@ -9,22 +9,13 @@ import { IEvents } from './base/Events';
 export class ProductModel extends Model<IProduct> {
 	constructor(data: Partial<IProduct>, events: IEvents) {
 		super(data, events);
-		console.log('ProductModel initialized');
 	}
 
 	setProducts(products: IProduct[]): void {
-		console.log(
-			'ProductModel: Emitting products:loaded event with products:',
-			products.length
-		);
 		this.emitChanges('products:loaded', { products });
 	}
 
 	setProduct(product: IProduct): void {
-		console.log(
-			'ProductModel: Emitting product:loaded event with product:',
-			product.id
-		);
 		this.emitChanges('product:loaded', { product });
 	}
 }
@@ -124,17 +115,14 @@ export class AppState extends Model<IAppState> {
 			loading: false,
 			paymentMethod: null,
 		};
-		console.log('AppState initialized');
 	}
 
 	private set(nextState: Partial<IAppState>): void {
 		this.state = { ...this.state, ...nextState };
-		console.log('AppState: State updated:', this.state);
 		this.emitChanges('state:updated', this.state);
 	}
 
 	setProducts(products: IProduct[]): void {
-		console.log('AppState: Setting products in catalog:', products.length);
 		this.set({ catalog: products });
 		this.productModel.setProducts(products);
 	}
@@ -145,7 +133,6 @@ export class AppState extends Model<IAppState> {
 
 	addToBasket(productId: string): void {
 		if (!this.state.basket.includes(productId)) {
-			console.log('Adding product to basket:', productId);
 			this.set({ basket: [...this.state.basket, productId] });
 			this.emitChanges('basket:updated', { basket: this.state.basket });
 			this.updateBasketCounter();
@@ -153,7 +140,6 @@ export class AppState extends Model<IAppState> {
 	}
 
 	removeFromBasket(productId: string): void {
-		console.log('Removing product from basket:', productId);
 		this.set({
 			basket: this.state.basket.filter((id) => id !== productId),
 		});
@@ -173,7 +159,6 @@ export class AppState extends Model<IAppState> {
 	}
 
 	getBasketItems(): IBasketItem[] {
-		console.log('Getting basket items, current basket:', this.state.basket);
 		return this.state.basket
 			.map((productId) => {
 				const product = this.state.catalog.find(

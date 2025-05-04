@@ -12,7 +12,7 @@ export class Preview extends Component<IProduct> {
 	protected _price: HTMLElement;
 	protected _button: HTMLButtonElement;
 
-	constructor(container: HTMLElement, private events: IEvents) {
+	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 
 		this._title = ensureElement<HTMLElement>('.card__title', container);
@@ -23,10 +23,16 @@ export class Preview extends Component<IProduct> {
 		this._button = ensureElement<HTMLButtonElement>('.card__button', container);
 
 		this._button.addEventListener('click', () => {
-			events.emit('preview:button-click', {
-				productId: this.container.dataset.id,
-			});
+			if (!this.isFree) {
+				events.emit('preview:button-click', {
+					productId: this.container.dataset.id,
+				});
+			}
 		});
+	}
+
+	private get isFree(): boolean {
+		return this._price.textContent?.includes('Бесплатно') ?? false;
 	}
 
 	set buttonText(value: string) {
@@ -47,6 +53,15 @@ export class Preview extends Component<IProduct> {
 
 	set price(value: number | null) {
 		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
+		if (!value) {
+			this._button.setAttribute('disabled', 'true');
+			this._button.classList.add('button_disabled');
+			this._button.textContent = 'Бесплатно';
+		} else {
+			this._button.removeAttribute('disabled');
+			this._button.classList.remove('button_disabled');
+			this._button.textContent = 'В корзину';
+		}
 	}
 
 	set category(value: string) {

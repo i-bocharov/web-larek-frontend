@@ -19,7 +19,6 @@ import { cloneTemplate, ensureElement } from './utils/utils';
 // --- ИНИЦИАЛИЗАЦИЯ ---
 const events = new EventEmitter();
 const api = new WebLarekApi(CDN_URL, API_URL);
-console.log('API initialized with URLs:', { CDN_URL, API_URL });
 
 const productModel = new ProductModel({}, events);
 const orderModel = new OrderModel({}, events);
@@ -293,11 +292,9 @@ events.on<{ order: IOrder }>('order:placed', ({ order }) => {
 });
 
 // Загрузка каталога
-console.log('Starting to load products catalog...');
 api
 	.getProducts()
 	.then((productList) => {
-		console.log('Products loaded:', productList.items.length);
 		appState.setProducts(productList.items);
 	})
 	.catch((error) => {

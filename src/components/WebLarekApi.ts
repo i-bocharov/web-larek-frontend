@@ -20,14 +20,11 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 	constructor(cdn: string, baseUrl: string, options?: RequestInit) {
 		super(baseUrl, options);
 		this.cdn = cdn;
-		console.log('WebLarekApi initialized with:', { cdn, baseUrl });
 	}
 
 	getProducts(): Promise<IProductList> {
-		console.log('Fetching products from API...');
 		return this.get('/product')
 			.then((data: IProductList) => {
-				console.log('Raw API response:', data);
 				const products = {
 					...data,
 					items: data.items.map((item) => ({
@@ -35,7 +32,6 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 						image: this.cdn + item.image.replace('.svg', '.png'),
 					})),
 				};
-				console.log('Processed products:', products);
 				return products;
 			})
 			.catch((error) => {
@@ -45,12 +41,10 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 	}
 
 	getProductById(id: string): Promise<IProduct | IProductNotFound> {
-		console.log('Fetching product by ID:', id);
 		return this.get(`/product/${id}`).then(
 			(data: IProduct | IProductNotFound) => {
 				if ('error' in data) {
 					// Если сервер вернул ошибку
-					console.log('Error fetching product:', data);
 					return data as IProductNotFound;
 				}
 				// Добавляем CDN к пути изображения
@@ -58,23 +52,19 @@ export class WebLarekApi extends Api implements IWebLarekApi {
 					...data,
 					image: this.cdn + (data as IProduct).image.replace('.svg', '.png'),
 				};
-				console.log('Product fetched successfully:', product);
 				return product;
 			}
 		);
 	}
 
 	placeOrder(order: IOrder): Promise<IOrderSuccess | IOrderError> {
-		console.log('Placing order:', order);
 		return this.post('/order', order).then(
 			(data: IOrderSuccess | IOrderError) => {
 				if ('error' in data) {
 					// Если сервер вернул ошибку
-					console.log('Error placing order:', data);
 					return data as IOrderError;
 				}
 				// Возвращаем успешный результат
-				console.log('Order placed successfully:', data);
 				return data as IOrderSuccess;
 			}
 		);

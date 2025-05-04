@@ -14,7 +14,6 @@ export class Card extends Component<IProduct> {
 
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
-		console.log('Initializing Card component');
 
 		this._title = ensureElement<HTMLElement>('.card__title', container);
 		this._price = ensureElement<HTMLElement>('.card__price', container);
@@ -23,15 +22,20 @@ export class Card extends Component<IProduct> {
 		this._description = container.querySelector('.card__text');
 		this._button = container;
 
-		this._button.addEventListener('click', () => {
-			console.log(
-				'Card clicked, emitting product:selected event with ID:',
-				this.container.dataset.id
-			);
-			events.emit('product:selected', {
-				productId: this.container.dataset.id,
-			});
+		// Модифицируем обработчик клика
+		this._button.addEventListener('click', (evt) => {
+			const target = evt.target as HTMLElement;
+			// Если клик был не по кнопке "В корзину", или товар не бесплатный - открываем карточку
+			if (!target.closest('.button') || !this.isFree) {
+				events.emit('product:selected', {
+					productId: this.container.dataset.id,
+				});
+			}
 		});
+	}
+
+	private get isFree(): boolean {
+		return this._price.textContent?.includes('Бесплатно') ?? false;
 	}
 
 	set id(value: string) {
@@ -48,6 +52,14 @@ export class Card extends Component<IProduct> {
 
 	set price(value: number | null) {
 		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
+		const button = this.container.querySelector('.button') as HTMLButtonElement;
+		if (!value) {
+			button?.setAttribute('disabled', 'true');
+			button?.classList.add('button_disabled');
+		} else {
+			button?.removeAttribute('disabled');
+			button?.classList.remove('button_disabled');
+		}
 	}
 
 	set category(value: string) {
@@ -68,7 +80,6 @@ export class Card extends Component<IProduct> {
 	}
 
 	render(data: IProduct): HTMLElement {
-		console.log('Rendering card with data:', data);
 		this.id = data.id;
 		this.title = data.title;
 		this.price = data.price;
