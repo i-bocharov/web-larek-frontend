@@ -7,6 +7,7 @@ export class Basket extends View<IBasketView> {
 	protected listElement: HTMLElement;
 	protected totalElement: HTMLElement;
 	protected buttonElement: HTMLElement;
+	public cloneCardBasketTemplate!: () => HTMLElement;
 
 	constructor(container: HTMLElement, events: EventEmitter) {
 		super(container, events);
@@ -35,7 +36,8 @@ export class Basket extends View<IBasketView> {
 
 	render(data: IBasketView): HTMLElement {
 		const items = data.items.map((item, index) => {
-			const element = cloneTemplate<HTMLElement>('#card-basket');
+			const element = this.cloneCardBasketTemplate() as HTMLElement;
+
 			this.setText(element.querySelector('.basket__item-index'), index + 1);
 			this.setText(element.querySelector('.card__title'), item.title);
 			this.setText(

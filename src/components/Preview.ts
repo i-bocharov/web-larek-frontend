@@ -1,5 +1,6 @@
 import { Component } from './base/Component';
 import { ensureElement } from '../utils/utils';
+import { productCategories } from '../utils/constants';
 import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
@@ -22,11 +23,14 @@ export class Preview extends Component<IProduct> {
 		this._button = ensureElement<HTMLButtonElement>('.card__button', container);
 
 		this._button.addEventListener('click', () => {
-			const isInBasket = this._button.textContent === 'Убрать из корзины';
-			events.emit(isInBasket ? 'basket:item-removed' : 'basket:item-added', {
+			events.emit('preview:button-click', {
 				productId: this.container.dataset.id,
 			});
 		});
+	}
+
+	set buttonText(value: string) {
+		this.setText(this._button, value);
 	}
 
 	set id(value: string) {
@@ -48,7 +52,7 @@ export class Preview extends Component<IProduct> {
 	set category(value: string) {
 		this.setText(this._category, value);
 		const categoryClass =
-			'card__category_' + value.toLowerCase().replace(/\s+/g, '-');
+			productCategories[value.toLowerCase()] || 'card__category_other';
 		this._category.className = `card__category ${categoryClass}`;
 	}
 

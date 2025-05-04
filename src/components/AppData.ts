@@ -38,24 +38,6 @@ export class OrderModel extends Model<IOrder> {
 		super(data, events);
 	}
 
-	private validateEmail(email: string): boolean {
-		return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email);
-	}
-
-	private validatePhone(phone: string): boolean {
-		return /^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
-			phone
-		);
-	}
-
-	private validatePayment(payment: string): boolean {
-		return payment === 'card' || payment === 'cash';
-	}
-
-	private validateAddress(address: string): boolean {
-		return address.length > 0;
-	}
-
 	validate(data: Partial<IOrder>): { valid: boolean; errors: string[] } {
 		const errors: string[] = [];
 
@@ -68,8 +50,6 @@ export class OrderModel extends Model<IOrder> {
 			const email = data.email || '';
 			if (!email) {
 				errors.push('Необходимо указать email');
-			} else if (!this.validateEmail(email)) {
-				errors.push('Некорректный формат email');
 			}
 		}
 
@@ -77,8 +57,6 @@ export class OrderModel extends Model<IOrder> {
 			const phone = data.phone || '';
 			if (!phone) {
 				errors.push('Необходимо указать телефон');
-			} else if (!this.validatePhone(phone)) {
-				errors.push('Некорректный формат телефона');
 			}
 		}
 
@@ -86,8 +64,6 @@ export class OrderModel extends Model<IOrder> {
 			const payment = data.payment || '';
 			if (!payment) {
 				errors.push('Необходимо выбрать способ оплаты');
-			} else if (!this.validatePayment(payment)) {
-				errors.push('Выберите способ оплаты');
 			}
 		}
 
@@ -95,8 +71,6 @@ export class OrderModel extends Model<IOrder> {
 			const address = data.address || '';
 			if (!address) {
 				errors.push('Необходимо указать адрес');
-			} else if (!this.validateAddress(address)) {
-				errors.push('Укажите адрес');
 			}
 		}
 
@@ -184,6 +158,7 @@ export class AppState extends Model<IAppState> {
 			console.log('Adding product to basket:', productId);
 			this.set({ basket: [...this.state.basket, productId] });
 			this.emitChanges('basket:updated', { basket: this.state.basket });
+			this.updateBasketCounter();
 		}
 	}
 
@@ -193,12 +168,13 @@ export class AppState extends Model<IAppState> {
 			basket: this.state.basket.filter((id) => id !== productId),
 		});
 		this.emitChanges('basket:updated', { basket: this.state.basket });
+		this.updateBasketCounter();
 	}
 
 	clearBasket(): void {
 		this.set({ basket: [] });
-		this.updateBasketCounter();
 		this.emitChanges('basket:updated', { basket: [] });
+		this.updateBasketCounter();
 	}
 
 	setPreview(productId: string | null): void {
@@ -264,5 +240,9 @@ export class AppState extends Model<IAppState> {
 
 	getBasket(): string[] {
 		return this.state.basket;
+	}
+
+	isInBasket(productId: string): boolean {
+		return this.state.basket.includes(productId);
 	}
 }

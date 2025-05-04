@@ -41,16 +41,18 @@ const header = new Header(
 );
 
 const basket = new Basket(cloneTemplate(basketTemplate), events);
+basket.cloneCardBasketTemplate = () => cloneTemplate(cardBasketTemplate);
 
 const cardList = new CardList(
 	document.querySelector('.gallery') as HTMLElement,
 	events
 );
-
 const modal = new Modal(
 	document.getElementById('modal-container') as HTMLElement,
 	events
 );
+const previewElement = cloneTemplate(cardPreviewTemplate);
+const preview = new Preview(previewElement, events);
 
 // --- ПОДПИСКА НА СОБЫТИЯ ---
 
@@ -67,17 +69,23 @@ events.on<{ products: IProduct[] }>('products:loaded', ({ products }) => {
 events.on<{ productId: string }>('product:selected', ({ productId }) => {
 	const product = appState.getCatalog().find((item) => item.id === productId);
 	if (product) {
-		const previewElement = cloneTemplate(cardPreviewTemplate);
-		const preview = new Preview(previewElement, events);
 		preview.render(product);
-
+		// Устанавливаем правильный текст кнопки в зависимости от наличия в корзине
 		const isInBasket = appState.getBasket().includes(productId);
-		const button = previewElement.querySelector('.card__button');
-		if (button) {
-			button.textContent = isInBasket ? 'Убрать из корзины' : 'В корзину';
-		}
-
+		preview.buttonText = isInBasket ? 'Убрать из корзины' : 'В корзину';
 		modal.render({ content: previewElement });
+	}
+});
+
+// Обработка смены текста на кнопке заказа товара
+events.on<{ productId: string }>('preview:button-click', ({ productId }) => {
+	const isInBasket = appState.getBasket().includes(productId); // проверка наличия товара в корзине
+	if (isInBasket) {
+		events.emit('basket:item-removed', { productId });
+		preview.buttonText = 'В корзину';
+	} else {
+		events.emit('basket:item-added', { productId });
+		preview.buttonText = 'Убрать из корзины';
 	}
 });
 
@@ -91,26 +99,23 @@ events.on('basket:open', () => {
 	modal.render({ content: basket.getContainer() });
 });
 
+// Обновление корзины при изменениях
+events.on('basket:updated', () => {
+	basket.render({
+		items: appState.getBasketItems(),
+		total: appState.calculateBasketTotal(),
+		selected: [] as string[],
+	});
+});
+
 // Добавление товара в корзину
 events.on<{ productId: string }>('basket:item-added', ({ productId }) => {
 	appState.addToBasket(productId);
-	appState.updateBasketCounter();
-	const button = modal.getContent().querySelector('.card__button');
-	if (button) button.textContent = 'Убрать из корзины';
 });
 
 // Удаление товара из корзины
 events.on<{ productId: string }>('basket:item-removed', ({ productId }) => {
 	appState.removeFromBasket(productId);
-	appState.updateBasketCounter();
-
-	const modalContent = modal.getContent();
-	if (modalContent.querySelector('.basket')) {
-		events.emit('basket:open');
-	}
-
-	const button = modalContent.querySelector('.card__button');
-	if (button) button.textContent = 'В корзину';
 });
 
 // Обновление счетчика корзины

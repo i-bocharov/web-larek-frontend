@@ -28,17 +28,32 @@ export class Modal extends Component<IModalData> {
 		this._content.replaceChildren(value);
 	}
 
+	toggleModal(state: boolean = true) {
+		this.toggleClass(this.container, 'modal_active', state);
+	}
+
+	// Обработчик в виде стрелочного метода, чтобы не терять контекст `this`
+	handleEscape = (evt: KeyboardEvent) => {
+		if (evt.key === 'Escape') {
+			this.close();
+		}
+	};
+
 	getContent(): HTMLElement {
 		return this._content;
 	}
 
 	open() {
-		this.toggleClass(this.container, 'modal_active');
+		this.toggleModal(); // открываем
+		// навешиваем обработчик при открытии
+		document.addEventListener('keydown', this.handleEscape);
 		this.events.emit('modal:open');
 	}
 
 	close() {
-		this.toggleClass(this.container, 'modal_active', false);
+		this.toggleModal(false); // закрываем
+		// правильно удаляем обработчик при закрытии
+		document.removeEventListener('keydown', this.handleEscape);
 		this.content = null;
 		this.events.emit('modal:close');
 	}
