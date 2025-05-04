@@ -1,98 +1,74 @@
 import { Model } from './base/Model';
 import { IProduct, IOrder, IAppState, IBasketItem } from '../types';
-import { WebLarekApi } from './WebLarekApi';
 import { IEvents } from './base/Events';
 
 /**
  * Модель для управления продуктами.
+ * Только хранение и обработка данных, никаких запросов к API!
  */
 export class ProductModel extends Model<IProduct> {
-	private api: WebLarekApi;
-
-	constructor(data: Partial<IProduct>, events: IEvents, api: WebLarekApi) {
+	constructor(data: Partial<IProduct>, events: IEvents) {
 		super(data, events);
-		this.api = api;
 	}
 
-	/**
-	 * Загружает список продуктов с сервера.
-	 */
-	async loadProducts(): Promise<{ products: IProduct[] }> {
-		try {
-			const productList = await this.api.getProducts();
-
-			this.emitChanges('products:loaded', { products: productList.items });
-
-			return { products: productList.items }; // Возвращаем продукты
-		} catch (error) {
-			this.emitChanges('products:error', {
-				error: 'Ошибка при загрузке продуктов',
-			});
-
-			throw error; // Пробрасываем ошибку для обработки выше
-		}
+	setProducts(products: IProduct[]): void {
+		this.emitChanges('products:loaded', { products });
 	}
 
-	/**
-	 * Загружает информацию о конкретном продукте по его ID.
-	 */
-	async loadProductById(id: string): Promise<void> {
-		try {
-			const product = await this.api.getProductById(id);
-
-			if ('error' in product) {
-				this.emitChanges('product:error', { error: product.error });
-			} else {
-				this.emitChanges('product:loaded', { product });
-			}
-		} catch (error) {
-			this.emitChanges('product:error', {
-				error: 'Ошибка при загрузке продукта',
-			});
-		}
+	setProduct(product: IProduct): void {
+		this.emitChanges('product:loaded', { product });
 	}
 }
 
 /**
  * Модель для управления заказами.
+ * Только хранение и валидация данных, никаких запросов к API!
  */
 export class OrderModel extends Model<IOrder> {
-	private api: WebLarekApi;
-
-	constructor(data: Partial<IOrder>, events: IEvents, api: WebLarekApi) {
+	constructor(data: Partial<IOrder>, events: IEvents) {
 		super(data, events);
-		this.api = api;
 	}
 
-	async placeOrder(orderData: IOrder): Promise<void> {
-		try {
-			const result = await this.api.placeOrder(orderData);
-
-			if ('error' in result) {
-				this.emitChanges('order:error', { error: result.error });
-			} else {
-				this.emitChanges('order:success', { order: result });
-			}
-		} catch (error) {
-			this.emitChanges('order:error', {
-				error: 'Ошибка при размещении заказа',
-			});
-		}
-	}
-
+	/**
+	 * Валидация данных заказа.
+	 * Возвращает true, если ошибок нет, иначе false и эмитит событие с ошибками.
+	 */
 	validateOrder(orderData: IOrder): boolean {
 		const errors: Partial<Record<keyof IOrder, string>> = {};
 
+		// Проверка способа оплаты
+		if (
+			!orderData.payment ||
+			(orderData.payment !== 'online' && orderData.payment !== 'cash')
+		) {
+			errors.payment = 'Выберите способ оплаты';
+		}
+
+		// Email
 		if (!orderData.email) {
 			errors.email = 'Необходимо указать email';
+		} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderData.email)) {
+			errors.email = 'Некорректный формат email';
 		}
+
+		// Телефон
 		if (!orderData.phone) {
 			errors.phone = 'Необходимо указать телефон';
+		} else if (
+			!/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
+				orderData.phone
+			)
+		) {
+			errors.phone = 'Некорректный формат телефона';
 		}
+
+		// Адрес
 		if (!orderData.address) {
 			errors.address = 'Необходимо указать адрес';
 		}
-		if (orderData.items.length === 0) {
+
+		// Корзина
+		if (!orderData.items || orderData.items.length === 0) {
 			errors.items = 'Корзина пуста';
 		}
 
@@ -100,67 +76,11 @@ export class OrderModel extends Model<IOrder> {
 
 		return Object.keys(errors).length === 0;
 	}
-
-	protected validateForm(): boolean {
-		const email = this.getEmail();
-		const phone = this.getPhone();
-
-		this.errors = [];
-
-		if (!email) {
-			this.errors.push('Email обязателен');
-		} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-			this.errors.push('Некорректный формат email');
-		}
-
-		if (!phone) {
-			this.errors.push('Телефон обязателен');
-		} else if (
-			!/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
-				phone
-			)
-		) {
-			this.errors.push('Некорректный формат телефона');
-		}
-
-		this.valid = this.errors.length === 0;
-		this.render({ errors: this.errors, valid: this.valid });
-		return this.valid;
-	}
-
-	if (emailInput && phoneInput) {
-		const validateForm = () => {
-			this.errors = [];
-			const email = this.getEmail();
-			const phone = this.getPhone();
-
-			if (!email) {
-				this.errors.push('Email обязателен');
-			} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-				this.errors.push('Некорректный формат email');
-			}
-
-			if (!phone) {
-				this.errors.push('Телефон обязателен');
-			} else if (
-				!/^\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}$/.test(
-					phone
-				)
-			) {
-				this.errors.push('Некорректный формат телефона');
-			}
-
-			this.valid = this.errors.length === 0;
-			this.render({ errors: this.errors, valid: this.valid });
-		};
-
-		emailInput.addEventListener('input', validateForm);
-		phoneInput.addEventListener('input', validateForm);
-	}
 }
 
 /**
  * Модель для состояния приложения.
+ * Хранит состояние, обновляет его и эмитит события.
  */
 export class AppState extends Model<IAppState> {
 	private state: IAppState;
@@ -200,19 +120,13 @@ export class AppState extends Model<IAppState> {
 		this.emitChanges('state:updated', this.state);
 	}
 
-	loadProducts(): void {
-		this.set({ loading: true });
-		this.productModel
-			.loadProducts()
-			.then(({ products }) => {
-				this.set({ catalog: products }); // Обновляем каталог продуктов
-			})
-			.catch(() => {
-				// Ошибка уже обработана в ProductModel, здесь можно ничего не делать
-			})
-			.finally(() => {
-				this.set({ loading: false });
-			});
+	setProducts(products: IProduct[]): void {
+		this.set({ catalog: products });
+		this.productModel.setProducts(products);
+	}
+
+	setProduct(product: IProduct): void {
+		this.productModel.setProduct(product);
 	}
 
 	addToBasket(productId: string): void {
@@ -277,25 +191,13 @@ export class AppState extends Model<IAppState> {
 		}, 0);
 	}
 
-	async placeOrder(orderData: IOrder): Promise<void> {
-		try {
-			this.set({ loading: true });
-
-			if (!this.orderModel.validateOrder(orderData)) {
-				return; // Валидация не пройдена
-			}
-
-			await this.orderModel.placeOrder(orderData);
-			this.set({ order: orderData }); // Обновляем состояние заказа
-			this.clearBasket(); // Очищаем корзину после успешного заказа
-			this.emitChanges('order:placed', { order: orderData });
-		} catch (error) {
-			this.emitChanges('order:error', {
-				error: 'Ошибка при размещении заказа',
-			});
-		} finally {
-			this.set({ loading: false });
+	placeOrder(orderData: IOrder): void {
+		if (!this.orderModel.validateOrder(orderData)) {
+			return; // Валидация не пройдена
 		}
+		this.set({ order: orderData }); // Обновляем состояние заказа
+		this.clearBasket(); // Очищаем корзину после успешного заказа
+		this.emitChanges('order:placed', { order: orderData });
 	}
 
 	updateBasketCounter(): void {

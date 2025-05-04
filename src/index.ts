@@ -1,156 +1,197 @@
-// ToDo
-// AppData
-// CardList
-// index
-
 import './scss/styles.scss';
 
 import { EventEmitter } from './components/base/Events';
 import { ProductModel, OrderModel, AppState } from './components/AppData';
 import { WebLarekApi } from './components/WebLarekApi';
 import { API_URL, CDN_URL } from './utils/constants';
-import { Page } from './components/Page';
+import { Header } from './components/Header';
+import { CardList } from './components/CardList';
+import { Card } from './components/Card';
+import { Basket } from './components/common/Basket';
+import { Modal } from './components/common/Modal';
 import { Preview } from './components/Preview';
 import { Order } from './components/Order';
 import { Contacts } from './components/Contacts';
 import { Success } from './components/common/Success';
-import { IProduct, IBasketItem, IOrder } from './types';
+import { IProduct, IOrder } from './types';
+import { cloneTemplate } from './utils/utils';
+
+// --- ИНИЦИАЛИЗАЦИЯ ---
 
 const events = new EventEmitter();
 const api = new WebLarekApi(CDN_URL, API_URL);
-const productModel = new ProductModel({}, events, api);
-const orderModel = new OrderModel({}, events, api);
+
+const productModel = new ProductModel({}, events);
+const orderModel = new OrderModel({}, events);
 const appState = new AppState(events, productModel, orderModel);
 
-const page = new Page();
+const header = new Header(
+	document.querySelector('.header') as HTMLElement,
+	events
+);
+const cardList = new CardList(
+	document.querySelector('.gallery') as HTMLElement
+);
+const modal = new Modal(
+	document.getElementById('modal-container') as HTMLElement,
+	events
+);
 
-// Вспомогательная функция генерации элементов корзины
-function getBasketItemElements(items: IBasketItem[]): HTMLElement[] {
-	const itemTemplate = document.getElementById(
-		'card-basket'
-	) as HTMLTemplateElement;
-	return items.map((item, idx) => {
-		const el = itemTemplate.content.firstElementChild!.cloneNode(
-			true
-		) as HTMLElement;
-		el.querySelector('.basket__item-index')!.textContent = (idx + 1).toString();
-		el.querySelector('.card__title')!.textContent = item.title;
-		el.querySelector('.card__price')!.textContent =
-			item.price !== null ? `${item.price} синапсов` : 'Бесплатно';
-		el.setAttribute('data-id', item.id);
-		return el;
+// --- СОБЫТИЯ ---
+
+// Загрузка каталога товаров с сервера через API и помещение в модель
+function loadCatalog() {
+	api.getProducts().then((productList) => {
+		productModel.setProducts(productList.items);
 	});
 }
+loadCatalog();
 
-// Вспомогательная функция генерации карточек каталога
-function getCatalogItemElements(products: IProduct[]): HTMLElement[] {
-	const cardTemplate = document.getElementById(
-		'card-catalog'
-	) as HTMLTemplateElement;
-	return products.map((product) => {
-		const el = cardTemplate.content.firstElementChild!.cloneNode(
-			true
-		) as HTMLElement;
-		el.querySelector('.card__category')!.textContent = product.category;
-		el.querySelector('.card__title')!.textContent = product.title;
-		el.querySelector('.card__image')!.setAttribute('src', product.image);
-		el.querySelector('.card__image')!.setAttribute('alt', product.title);
-		el.querySelector('.card__price')!.textContent =
-			product.price !== null ? `${product.price} синапсов` : 'Бесплатно';
-		return el;
-	});
-}
-
-// Загрузка продуктов и отображение каталога
+// Рендер каталога карточек
 events.on<{ products: IProduct[] }>('products:loaded', ({ products }) => {
-	const cardElements = getCatalogItemElements(products);
-	page.renderProducts(cardElements);
+	const cardElements = products.map((product) => {
+		const cardElement = cloneTemplate<HTMLButtonElement>('#card-catalog');
+		const card = new Card(cardElement, events);
+		card.render(product);
+		return cardElement;
+	});
+	cardList.render({ items: cardElements });
 });
 
-// Обновление счетчика корзины
-events.on<{ count: number }>('basket:counter', ({ count }) => {
-	page.updateBasketCounter(count);
+// Открытие предпросмотра товара (запрос к API)
+events.on<{ productId: string }>('product:selected', ({ productId }) => {
+	api.getProductById(productId).then((product) => {
+		if ('error' in product) {
+			alert('Товар не найден!');
+			return;
+		}
+		productModel.setProduct(product);
+	});
+});
+
+// Рендер предпросмотра товара
+events.on<{ product: IProduct }>('product:loaded', ({ product }) => {
+	const previewElement = cloneTemplate<HTMLElement>('#card-preview');
+	const preview = new Preview(previewElement, events);
+	preview.render(product);
+
+	const isInBasket = appState
+		.getBasketItems()
+		.some((item) => item.id === product.id);
+	const button = previewElement.querySelector('.card__button');
+	if (button)
+		button.textContent = isInBasket ? 'Убрать из корзины' : 'В корзину';
+
+	modal.render({ content: previewElement });
 });
 
 // Открытие корзины
 events.on('basket:open', () => {
-	const basketItems = appState.getBasketItems();
-	const itemElements = getBasketItemElements(basketItems);
-	page.showBasket(itemElements, appState.calculateBasketTotal());
+	const basketTemplate = document.querySelector(
+		'#basket'
+	) as HTMLTemplateElement;
+	const basketContainer = basketTemplate.content.cloneNode(true) as HTMLElement;
+	const basket = new Basket(events);
+
+	basket.render({
+		items: appState.getBasketItems(),
+		total: appState.calculateBasketTotal(),
+		selected: [],
+	});
+
+	modal.render({ content: basketContainer });
 });
 
-// Открытие предпросмотра товара
-events.on<{ product: IProduct }>('product:loaded', ({ product }) => {
-	const previewTemplate = document.getElementById(
-		'card-preview'
-	) as HTMLTemplateElement;
-	const previewElement = previewTemplate.content.firstElementChild!.cloneNode(
-		true
-	) as HTMLElement;
-	previewElement.querySelector('.card__category')!.textContent =
-		product.category;
-	previewElement.querySelector('.card__title')!.textContent = product.title;
-	previewElement.querySelector('.card__text')!.textContent =
-		product.description;
-	previewElement.querySelector('.card__price')!.textContent =
-		product.price !== null ? `${product.price} синапсов` : 'Бесплатно';
-	previewElement
-		.querySelector('.card__image')!
-		.setAttribute('src', product.image);
-	previewElement
-		.querySelector('.card__image')!
-		.setAttribute('alt', product.title);
+// Добавление товара в корзину
+events.on<{ productId: string }>('basket:item-added', ({ productId }) => {
+	appState.addToBasket(productId);
+	appState.updateBasketCounter();
+	const button = modal.getContent().querySelector('.card__button');
+	if (button) button.textContent = 'Убрать из корзины';
+});
 
-	// Кнопка "В корзину" или "Убрать из корзины"
-	const basketItems = appState.getBasketItems();
-	const isInBasket = basketItems.some((item) => item.id === product.id);
-	const button = previewElement.querySelector('.card__button');
-	if (button) {
-		button.textContent = isInBasket ? 'Убрать из корзины' : 'В корзину';
+// Удаление товара из корзины
+events.on<{ productId: string }>('basket:item-removed', ({ productId }) => {
+	appState.removeFromBasket(productId);
+	appState.updateBasketCounter();
+
+	// Если открыта корзина, пересоздаём её заново!
+	const modalContent = modal.getContent();
+	if (modalContent.querySelector('.basket')) {
+		events.emit('basket:open');
 	}
 
-	page.showPreview(previewElement);
+	const button = modal.getContent().querySelector('.card__button');
+	if (button) button.textContent = 'В корзину';
+});
+
+// Обновление счетчика корзины
+events.on<{ count: number }>('basket:counter', ({ count }) => {
+	header.updateBasketCounter(count);
 });
 
 // Открытие формы заказа
 events.on('order:open', () => {
-	const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
-	const orderFormElement = orderTemplate.content.firstElementChild!.cloneNode(
-		true
-	) as HTMLFormElement;
-	page.showOrderForm(orderFormElement);
+	const orderFormElement = cloneTemplate<HTMLFormElement>('#order');
+	const orderForm = new Order(orderFormElement, events);
+	modal.render({ content: orderFormElement });
 });
 
-// Открытие формы контактов
-events.on('contacts:open', () => {
-	const contactsTemplate = document.getElementById(
-		'contacts'
-	) as HTMLTemplateElement;
-	const contactsFormElement =
-		contactsTemplate.content.firstElementChild!.cloneNode(
-			true
-		) as HTMLFormElement;
-	page.showContactsForm(contactsFormElement);
+// Открытие формы контактов после успешной валидации заказа
+events.on('order:form-open', () => {
+	const contactsFormElement = cloneTemplate<HTMLFormElement>('#contacts');
+	const contactsForm = new Contacts(contactsFormElement, events);
+	modal.render({ content: contactsFormElement });
 });
 
-// Открытие окна успеха
+// Обработка изменения способа оплаты
+events.on<{ method: string }>('payment:method:changed', ({ method }) => {
+	appState.setPaymentMethod(method as 'online' | 'cash');
+	const orderFormElement = modal.getContent().querySelector('form');
+	if (orderFormElement) {
+		const orderForm = new Order(orderFormElement as HTMLFormElement, events);
+		orderForm.render({
+			payment: method,
+			valid: orderForm['validatePayment'](method),
+			errors: [],
+		});
+	}
+});
+
+// Валидация контактов и оформление заказа (запрос к API)
+events.on<{ emailInput: string; phoneInput: string }>(
+	'contacts:validate',
+	({ emailInput, phoneInput }) => {
+		const basketItems = appState.getBasketItems();
+		const orderData: IOrder = {
+			payment: appState.getPaymentMethod() || 'online',
+			email: emailInput,
+			phone: phoneInput,
+			address:
+				(
+					modal
+						.getContent()
+						.querySelector('input[name="address"]') as HTMLInputElement
+				)?.value ?? '',
+			total: appState.calculateBasketTotal(),
+			items: basketItems.map((item) => item.id),
+		};
+		api.placeOrder(orderData).then((result) => {
+			if ('error' in result) {
+				alert(result.error);
+				return;
+			}
+			appState.placeOrder(orderData);
+		});
+	}
+);
+
+// Успешное размещение заказа
 events.on<{ order: IOrder }>('order:placed', ({ order }) => {
-	const successTemplate = document.getElementById(
-		'success'
-	) as HTMLTemplateElement;
-	const successElement = successTemplate.content.firstElementChild!.cloneNode(
-		true
-	) as HTMLElement;
-	successElement.querySelector(
-		'.order-success__description'
-	)!.textContent = `Списано ${order.total} синапсов`;
-	page.showSuccess(successElement);
+	const successElement = cloneTemplate<HTMLElement>('#success');
+	const success = new Success(successElement, {
+		onClick: () => modal.close(),
+	});
+	success.render({ total: order.total });
+	modal.render({ content: successElement });
 });
-
-// Закрытие модалки
-events.on('modal:close', () => {
-	page.closeModal();
-});
-
-// Старт приложения
-appState.loadProducts();
