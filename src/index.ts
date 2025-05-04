@@ -126,13 +126,15 @@ events.on<{ count: number }>('basket:counter', ({ count }) => {
 // Открытие и обработка формы заказа
 events.on('order:open', () => {
 	const orderForm = new Order(cloneTemplate(orderTemplate), events);
+
+	// Проверяем валидность данных с пустыми значениями
 	const { valid, errors } = orderModel.validate({
-		payment: appState.getPaymentMethod(),
+		payment: null,
 		address: '',
 	});
 
 	modal.render({
-		content: orderForm.render({ valid, errors }),
+		content: orderForm.render({ payment: null, valid, errors }),
 	});
 
 	const handlers = {
@@ -173,6 +175,8 @@ events.on('order:open', () => {
 
 	subscribe();
 	events.on('modal:close', () => {
+		// Сбрасываем способ оплаты при закрытии модального окна
+		appState.setPaymentMethod(null);
 		unsubscribe();
 		events.off('modal:close', unsubscribe);
 	});
@@ -181,8 +185,15 @@ events.on('order:open', () => {
 // Открытие и обработка формы контактов
 events.on('order:next', () => {
 	const contactsForm = new Contacts(cloneTemplate(contactsTemplate), events);
+
+	// Проверяем валидность данных сразу с пустыми значениями
+	const { valid, errors } = orderModel.validate({
+		email: '',
+		phone: '',
+	});
+
 	modal.render({
-		content: contactsForm.render({ valid: true, errors: [] }),
+		content: contactsForm.render({ valid, errors }),
 	});
 
 	const handlers = {

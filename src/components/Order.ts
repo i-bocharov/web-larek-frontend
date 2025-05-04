@@ -99,8 +99,6 @@ export class Order extends Form<IOrder> {
 		}
 		if (errors && Array.isArray(errors)) {
 			this.setErrors(errors);
-		} else {
-			this.setErrors([]);
 		}
 		return this.container;
 	}

@@ -46,19 +46,20 @@ export class OrderModel extends Model<IOrder> {
 			return { valid: false, errors };
 		}
 
-		if (!data.payment) {
+		// Проверяем только если поле передано
+		if ('payment' in data && !data.payment) {
 			errors.push('Необходимо выбрать способ оплаты');
 		}
 
-		if (!data.address) {
+		if ('address' in data && !data.address) {
 			errors.push('Необходимо указать адрес');
 		}
 
-		if (data.email !== undefined && !data.email) {
+		if ('email' in data && !data.email) {
 			errors.push('Необходимо указать email');
 		}
 
-		if (data.phone !== undefined && !data.phone) {
+		if ('phone' in data && !data.phone) {
 			errors.push('Необходимо указать телефон');
 		}
 
@@ -213,9 +214,11 @@ export class AppState extends Model<IAppState> {
 		this.emitChanges('basket:counter', { count });
 	}
 
-	setPaymentMethod(method: 'online' | 'cash'): void {
+	setPaymentMethod(method: 'online' | 'cash' | null): void {
 		this.set({ paymentMethod: method });
-		this.emitChanges('payment:method', { method });
+		if (method) {
+			this.emitChanges('payment:method', { method });
+		}
 	}
 
 	getPaymentMethod(): 'online' | 'cash' | null {
