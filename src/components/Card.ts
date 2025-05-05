@@ -1,12 +1,10 @@
 import { ProductView } from './ProductView';
 import { ensureElement } from '../utils/utils';
-import { productCategories } from '../utils/constants';
 import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
 export class Card extends ProductView {
 	protected _price: HTMLElement;
-	protected _category: HTMLElement;
 	protected _image: HTMLImageElement;
 	protected _description: HTMLElement | null;
 	protected _button: HTMLElement;
@@ -53,13 +51,6 @@ export class Card extends ProductView {
 		if (button) {
 			this.toggleClass(button, 'button_disabled', !value);
 		}
-	}
-
-	set category(value: string) {
-		this.setText(this._category, value);
-		const categoryClass =
-			productCategories[value.toLowerCase()] || 'card__category_other';
-		this._category.className = `card__category ${categoryClass}`;
 	}
 
 	set image(value: string) {

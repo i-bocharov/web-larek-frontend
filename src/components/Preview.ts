@@ -1,13 +1,11 @@
 import { ProductView } from './ProductView';
 import { ensureElement } from '../utils/utils';
-import { productCategories } from '../utils/constants';
 import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
 export class Preview extends ProductView {
 	protected _image: HTMLImageElement;
 	protected _description: HTMLElement;
-	protected _category: HTMLElement;
 	protected _price: HTMLElement;
 	protected _button: HTMLButtonElement;
 
@@ -51,13 +49,6 @@ export class Preview extends ProductView {
 		this.setText(this._button, value ? 'В корзину' : 'Бесплатно');
 		this.setDisabled(this._button, !value);
 		this.toggleClass(this._button, 'button_disabled', !value);
-	}
-
-	set category(value: string) {
-		this.setText(this._category, value);
-		const categoryClass =
-			productCategories[value.toLowerCase()] || 'card__category_other';
-		this._category.className = `card__category ${categoryClass}`;
 	}
 
 	set image(value: string) {
