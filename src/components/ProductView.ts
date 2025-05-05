@@ -6,6 +6,7 @@ export abstract class ProductView extends Component<IProduct> {
 	protected _title: HTMLElement;
 	protected _category: HTMLElement;
 	protected _image: HTMLImageElement;
+	protected _description?: HTMLElement | null;
 
 	set title(value: string) {
 		this.setText(this._title, value);
@@ -20,5 +21,11 @@ export abstract class ProductView extends Component<IProduct> {
 
 	set image(value: string) {
 		this.setImage(this._image, value, this._title.textContent || '');
+	}
+
+	set description(value: string) {
+		if (this._description) {
+			this.setText(this._description, value);
+		}
 	}
 }

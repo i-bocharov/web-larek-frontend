@@ -5,7 +5,6 @@ import { IProduct } from '../types';
 
 export class Card extends ProductView {
 	protected _price: HTMLElement;
-	protected _description: HTMLElement | null;
 	protected _button: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
@@ -52,21 +51,17 @@ export class Card extends ProductView {
 		}
 	}
 
-	set description(value: string) {
-		if (this._description) {
-			this.setText(this._description, value);
-		}
-	}
-
 	render(data: IProduct): HTMLElement {
 		this.id = data.id;
 		this.title = data.title;
 		this.price = data.price;
 		this.category = data.category;
 		this.image = data.image;
+
 		if (data.description) {
 			this.description = data.description;
 		}
+
 		return this.container;
 	}
 }

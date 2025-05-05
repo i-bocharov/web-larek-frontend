@@ -4,7 +4,6 @@ import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
 export class Preview extends ProductView {
-	protected _description: HTMLElement;
 	protected _price: HTMLElement;
 	protected _button: HTMLButtonElement;
 
@@ -27,12 +26,12 @@ export class Preview extends ProductView {
 		});
 	}
 
-	private get isFree(): boolean {
-		return this._price.textContent?.includes('Бесплатно') ?? false;
-	}
-
 	set buttonText(value: string) {
 		this.setText(this._button, value);
+	}
+
+	private get isFree(): boolean {
+		return this._price.textContent?.includes('Бесплатно') ?? false;
 	}
 
 	set id(value: string) {
@@ -50,10 +49,6 @@ export class Preview extends ProductView {
 		this.toggleClass(this._button, 'button_disabled', !value);
 	}
 
-	set description(value: string) {
-		this.setText(this._description, value);
-	}
-
 	render(data: IProduct): HTMLElement {
 		this.id = data.id;
 		this.title = data.title;
@@ -61,6 +56,7 @@ export class Preview extends ProductView {
 		this.category = data.category;
 		this.image = data.image;
 		this.description = data.description;
+
 		return this.container;
 	}
 }
