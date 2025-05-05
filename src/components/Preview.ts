@@ -37,12 +37,9 @@ export class Preview extends ProductView {
 		this.toggleClass(this._button, 'button_disabled', !value);
 	}
 
-	render(data: IProduct): HTMLElement {
-		this.id = data.id;
-		this.title = data.title;
-		this.price = data.price;
-		this.category = data.category;
-		this.image = data.image;
+	override render(data: IProduct): HTMLElement {
+		super.render(data);
+
 		this.description = data.description;
 
 		return this.container;

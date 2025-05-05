@@ -40,15 +40,7 @@ export class Card extends ProductView {
 	}
 
 	render(data: IProduct): HTMLElement {
-		this.id = data.id;
-		this.title = data.title;
-		this.price = data.price;
-		this.category = data.category;
-		this.image = data.image;
-
-		if (data.description) {
-			this.description = data.description;
-		}
+		super.render(data);
 
 		return this.container;
 	}

@@ -38,11 +38,21 @@ export abstract class ProductView extends Component<IProduct> {
 		}
 	}
 
+	set price(value: number | null) {
+		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
+	}
+
 	get isFree(): boolean {
 		return this._price.textContent?.includes('Бесплатно') ?? false;
 	}
 
-	set price(value: number | null) {
-		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
+	render(data: IProduct): HTMLElement {
+		this.id = data.id;
+		this.title = data.title;
+		this.category = data.category;
+		this.image = data.image;
+		this.price = data.price;
+
+		return this.container;
 	}
 }
