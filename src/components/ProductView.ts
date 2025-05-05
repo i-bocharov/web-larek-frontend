@@ -7,6 +7,7 @@ export abstract class ProductView extends Component<IProduct> {
 	protected _category: HTMLElement;
 	protected _image: HTMLImageElement;
 	protected _description?: HTMLElement | null;
+	protected _price: HTMLElement;
 
 	set id(value: string) {
 		this.container.dataset.id = value;
@@ -35,5 +36,9 @@ export abstract class ProductView extends Component<IProduct> {
 		if (this._description) {
 			this.setText(this._description, value);
 		}
+	}
+
+	get isFree(): boolean {
+		return this._price.textContent?.includes('Бесплатно') ?? false;
 	}
 }

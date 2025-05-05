@@ -30,10 +30,6 @@ export class Preview extends ProductView {
 		this.setText(this._button, value);
 	}
 
-	private get isFree(): boolean {
-		return this._price.textContent?.includes('Бесплатно') ?? false;
-	}
-
 	set price(value: number | null) {
 		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
 		this.setText(this._button, value ? 'В корзину' : 'Бесплатно');

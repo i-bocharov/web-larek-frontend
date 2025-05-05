@@ -29,10 +29,6 @@ export class Card extends ProductView {
 		});
 	}
 
-	private get isFree(): boolean {
-		return this._price.textContent?.includes('Бесплатно') ?? false;
-	}
-
 	set price(value: number | null) {
 		const button = this.container.querySelector('.button') as HTMLButtonElement;
 
