@@ -1,11 +1,10 @@
-import { Component } from './base/Component';
+import { ProductView } from './ProductView';
 import { ensureElement } from '../utils/utils';
 import { productCategories } from '../utils/constants';
 import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
-export class Card extends Component<IProduct> {
-	protected _title: HTMLElement;
+export class Card extends ProductView {
 	protected _price: HTMLElement;
 	protected _category: HTMLElement;
 	protected _image: HTMLImageElement;
@@ -44,10 +43,6 @@ export class Card extends Component<IProduct> {
 
 	get id(): string {
 		return this.container.dataset.id || '';
-	}
-
-	set title(value: string) {
-		this.setText(this._title, value);
 	}
 
 	set price(value: number | null) {

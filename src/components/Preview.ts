@@ -1,11 +1,10 @@
-import { Component } from './base/Component';
+import { ProductView } from './ProductView';
 import { ensureElement } from '../utils/utils';
 import { productCategories } from '../utils/constants';
 import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
-export class Preview extends Component<IProduct> {
-	protected _title: HTMLElement;
+export class Preview extends ProductView {
 	protected _image: HTMLImageElement;
 	protected _description: HTMLElement;
 	protected _category: HTMLElement;
@@ -45,10 +44,6 @@ export class Preview extends Component<IProduct> {
 
 	get id(): string {
 		return this.container.dataset.id || '';
-	}
-
-	set title(value: string) {
-		this.setText(this._title, value);
 	}
 
 	set price(value: number | null) {
