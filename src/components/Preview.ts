@@ -4,7 +4,6 @@ import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
 export class Preview extends ProductView {
-	protected _image: HTMLImageElement;
 	protected _description: HTMLElement;
 	protected _price: HTMLElement;
 	protected _button: HTMLButtonElement;
@@ -49,10 +48,6 @@ export class Preview extends ProductView {
 		this.setText(this._button, value ? 'В корзину' : 'Бесплатно');
 		this.setDisabled(this._button, !value);
 		this.toggleClass(this._button, 'button_disabled', !value);
-	}
-
-	set image(value: string) {
-		this.setImage(this._image, value, this._title.textContent || '');
 	}
 
 	set description(value: string) {

@@ -5,7 +5,6 @@ import { IProduct } from '../types';
 
 export class Card extends ProductView {
 	protected _price: HTMLElement;
-	protected _image: HTMLImageElement;
 	protected _description: HTMLElement | null;
 	protected _button: HTMLElement;
 
@@ -51,10 +50,6 @@ export class Card extends ProductView {
 		if (button) {
 			this.toggleClass(button, 'button_disabled', !value);
 		}
-	}
-
-	set image(value: string) {
-		this.setImage(this._image, value, this._title.textContent || '');
 	}
 
 	set description(value: string) {
