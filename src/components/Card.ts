@@ -51,14 +51,12 @@ export class Card extends Component<IProduct> {
 	}
 
 	set price(value: number | null) {
-		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
 		const button = this.container.querySelector('.button') as HTMLButtonElement;
-		if (!value) {
-			button?.setAttribute('disabled', 'true');
-			button?.classList.add('button_disabled');
-		} else {
-			button?.removeAttribute('disabled');
-			button?.classList.remove('button_disabled');
+
+		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
+		this.setDisabled(button, !value);
+		if (button) {
+			this.toggleClass(button, 'button_disabled', !value);
 		}
 	}
 

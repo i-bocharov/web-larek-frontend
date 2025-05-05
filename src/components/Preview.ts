@@ -53,15 +53,9 @@ export class Preview extends Component<IProduct> {
 
 	set price(value: number | null) {
 		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
-		if (!value) {
-			this._button.setAttribute('disabled', 'true');
-			this._button.classList.add('button_disabled');
-			this._button.textContent = 'Бесплатно';
-		} else {
-			this._button.removeAttribute('disabled');
-			this._button.classList.remove('button_disabled');
-			this._button.textContent = 'В корзину';
-		}
+		this.setText(this._button, value ? 'В корзину' : 'Бесплатно');
+		this.setDisabled(this._button, !value);
+		this.toggleClass(this._button, 'button_disabled', !value);
 	}
 
 	set category(value: string) {
