@@ -41,4 +41,8 @@ export abstract class ProductView extends Component<IProduct> {
 	get isFree(): boolean {
 		return this._price.textContent?.includes('Бесплатно') ?? false;
 	}
+
+	set price(value: number | null) {
+		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
+	}
 }

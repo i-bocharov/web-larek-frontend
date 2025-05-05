@@ -4,7 +4,6 @@ import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
 export class Card extends ProductView {
-	protected _price: HTMLElement;
 	protected _button: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
@@ -29,10 +28,11 @@ export class Card extends ProductView {
 		});
 	}
 
-	set price(value: number | null) {
+	override set price(value: number | null) {
+		super.price = value;
+
 		const button = this.container.querySelector('.button') as HTMLButtonElement;
 
-		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
 		this.setDisabled(button, !value);
 		if (button) {
 			this.toggleClass(button, 'button_disabled', !value);

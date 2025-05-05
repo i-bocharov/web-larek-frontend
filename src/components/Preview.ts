@@ -4,7 +4,6 @@ import { IEvents } from './base/Events';
 import { IProduct } from '../types';
 
 export class Preview extends ProductView {
-	protected _price: HTMLElement;
 	protected _button: HTMLButtonElement;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
@@ -30,8 +29,9 @@ export class Preview extends ProductView {
 		this.setText(this._button, value);
 	}
 
-	set price(value: number | null) {
-		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
+	override set price(value: number | null) {
+		super.price = value;
+
 		this.setText(this._button, value ? 'В корзину' : 'Бесплатно');
 		this.setDisabled(this._button, !value);
 		this.toggleClass(this._button, 'button_disabled', !value);
