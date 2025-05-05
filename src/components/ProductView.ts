@@ -8,6 +8,14 @@ export abstract class ProductView extends Component<IProduct> {
 	protected _image: HTMLImageElement;
 	protected _description?: HTMLElement | null;
 
+	set id(value: string) {
+		this.container.dataset.id = value;
+	}
+
+	get id(): string {
+		return this.container.dataset.id || '';
+	}
+
 	set title(value: string) {
 		this.setText(this._title, value);
 	}

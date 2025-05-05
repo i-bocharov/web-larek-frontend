@@ -33,14 +33,6 @@ export class Card extends ProductView {
 		return this._price.textContent?.includes('Бесплатно') ?? false;
 	}
 
-	set id(value: string) {
-		this.container.dataset.id = value;
-	}
-
-	get id(): string {
-		return this.container.dataset.id || '';
-	}
-
 	set price(value: number | null) {
 		const button = this.container.querySelector('.button') as HTMLButtonElement;
 

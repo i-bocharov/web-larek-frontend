@@ -34,14 +34,6 @@ export class Preview extends ProductView {
 		return this._price.textContent?.includes('Бесплатно') ?? false;
 	}
 
-	set id(value: string) {
-		this.container.dataset.id = value;
-	}
-
-	get id(): string {
-		return this.container.dataset.id || '';
-	}
-
 	set price(value: number | null) {
 		this.setText(this._price, value ? `${value} синапсов` : 'Бесплатно');
 		this.setText(this._button, value ? 'В корзину' : 'Бесплатно');
